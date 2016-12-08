@@ -6,6 +6,7 @@ RLRDRDULULUDLUDRDRLUDLDLLUDURULDDDUDLRURLLRLRLDLDRLDURDLRRURLULLULURLLDRRDRLUDRL
 ULUDLLUDDULRUURDRURDUDUDLUURDDDRRLUDURURDRURRLDRDURLRLLRRDDRRDRRRUULURUDURUDULRRRRDDLDURRLRRDUDDDRLLLULDRLRLURRDUURDURRRURRDLUDUDDRLDLURRRDDRLLRDRDDRDURRRRLURRLUDDURRULRUDUDULDRUDDRULLUUULDURRRLDRULLURULLRUDLDUDDLDULDLUUDRULULDLLDRULLRUULDUDUUDRLRRLDLUULUDLLDDRLRRDDLLURURDULRRDDRURDRLRLULDLDURULLUUUDURURDLDUDDDDUUULUDLUURRULLDLRLURDLURLRLDDURRLDDRRRDUUULLUULDLLDLLDDRLRRUDLULDRLULDULULRRLRULUUURURUUURDUUDDURLLUDDRLRDDLUURRUULRDLDDRLULUULRDRURLUURDRDUURUDLRR'''
 KEYPAD = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 x, y = (1, 1)
+ANSWER = []
 
 for line in INSNS.split ('\n'):
     for insn in line:
@@ -17,8 +18,9 @@ for line in INSNS.split ('\n'):
             x = max (0, x-1)
         else:
             x = min (2, x+1)
-    print KEYPAD[y][x],
-print
+    ANSWER.append (str (KEYPAD[y][x]))
+print ''.join (ANSWER)
+
 
 #     1
 #   2 3 4
@@ -28,6 +30,7 @@ print
 
 KEYPAD2 = [[None, None, 1, None, None], [None, 2, 3, 4, None], [5, 6, 7, 8, 9], [None, 'A', 'B', 'C', None], [None, None, 'D', None, None]]
 x, y = (0, 2)
+ANSWER = []
 
 for line in INSNS.split ('\n'):
     for insn in line:
@@ -43,5 +46,5 @@ for line in INSNS.split ('\n'):
         # print insn, (newx, newy),
         if KEYPAD2[newy][newx] is not None:
             x, y = (newx, newy)
-    print KEYPAD2[y][x],
-print
+    ANSWER.append (str (KEYPAD2[y][x]))
+print ''.join (ANSWER)
