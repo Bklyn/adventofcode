@@ -67,6 +67,8 @@ with open ('4.txt') as f:
         # print name, sector, checksum, mysum
         if mysum == checksum:
             answer += sector
-        print sector, decode (name, sector)
+        decoded = decode (name, sector)
+        if decoded == 'northpole object storage':
+            print decoded, sector
 
 print answer
