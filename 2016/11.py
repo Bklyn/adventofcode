@@ -168,5 +168,35 @@ step, even if nothing is added to or removed from it.)
 
 In your situation, what is the minimum number of steps required to
 bring all of the objects to the fourth floor?
+'''
 
 '''
+The first floor contains a thulium generator, a thulium-compatible microchip, a plutonium generator, and a strontium generator.
+The second floor contains a plutonium-compatible microchip and a strontium-compatible microchip.
+The third floor contains a promethium generator, a promethium-compatible microchip, a ruthenium generator, and a ruthenium-compatible microchip.
+The fourth floor contains nothing relevant.
+'''
+
+# Not my code, sadly :(
+
+thulium, plutonium, strontium, promethium, ruthenium, elerium, dilithium = 1, 2, 3, 4, 5, 6, 7, 8
+state = (0,
+         tuple(sorted((thulium, -thulium, plutonium, strontium))),
+         tuple(sorted((-plutonium, -strontium))),
+         tuple(sorted((promethium, -promethium, ruthenium, -ruthenium))),
+         ())
+
+def legal (floor):
+    if not floor or floor[-1] < 0: # Only chips
+        return True
+    # All chips are matched with generators
+    return all (-chip in floor for chip in floor if chip < 0)
+
+def solver (state, seen={}):
+    floor, floors = state
+    moves = [
+
+def solve (state):
+    pass
+
+print state
