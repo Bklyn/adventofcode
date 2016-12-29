@@ -56,3 +56,21 @@ However, your situation has more than two discs; you've noted their
 positions in your puzzle input. What is the first time you can press
 the button to get a capsule?
 '''
+
+def solve(discs):
+    t = 0
+    while True:
+        for x in range (len (discs)):
+            positions, offset = discs[x]
+            remainder = (offset + t + x + 1) % positions
+            if remainder:
+                break
+        else:
+            return t
+        t += 1
+    return t
+
+DISCS = [(17, 5), (19, 8), (7, 1), (13, 7), (5, 1), (3, 0)]
+
+print solve(DISCS)
+print solve(DISCS + [(11, 0)])
