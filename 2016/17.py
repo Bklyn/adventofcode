@@ -68,26 +68,32 @@ Your puzzle input is gdjjyniy.
 
 import md5
 
-def moves(seed, path):
-    digest = md5.new (seed + ''.join (path)).hexdigest ()[:4]
+def is_open(c):
+    return c < 'b'
 
+def can_move(seed, path):
+    digest = md5.new (seed + ''.join (path)).hexdigest ()
+    return map (is_open, digest[:4])
 
 def dfs_paths(seed, start=(0,0), goal=(4,4)):
     stack = [(start, [start])]
     best = 99999999
     while stack:
         (vertex, path) = stack.pop()
+        moves = can_move (seed, path)
         x, y = vertex
         up, down, left, right = [None] * 4
-        if y > 0:
+        if y > 0 and moves[0]:
             up = (x, y-1)
-        down = (x, y+1)
-        if x > 0:
+        if moves[1]:
+            down = (x, y+1)
+        if x > 0 and moves[2]:
             left = (x-1, y)
-        right = (x+1, y)
-        # print vertex, path, [up, down, left, right]
+        if moves[3]:
+            right = (x+1, y)
+        print vertex, path, moves, [up, down, left, right]
         for next in set ([up, down, left, right]) - set(path):
-            if next is None or not is_open (next):
+            if next is None:
                 continue
             if next == goal:
                 if len (path) < best:
