@@ -65,3 +65,35 @@ path, not just the length) to reach the vault?
 
 Your puzzle input is gdjjyniy.
 '''
+
+import md5
+
+def moves(seed, path):
+    digest = md5.new (seed + ''.join (path)).hexdigest ()[:4]
+
+
+def dfs_paths(seed, start=(0,0), goal=(4,4)):
+    stack = [(start, [start])]
+    best = 99999999
+    while stack:
+        (vertex, path) = stack.pop()
+        x, y = vertex
+        up, down, left, right = [None] * 4
+        if y > 0:
+            up = (x, y-1)
+        down = (x, y+1)
+        if x > 0:
+            left = (x-1, y)
+        right = (x+1, y)
+        # print vertex, path, [up, down, left, right]
+        for next in set ([up, down, left, right]) - set(path):
+            if next is None or not is_open (next):
+                continue
+            if next == goal:
+                if len (path) < best:
+                    yield path + [next]
+                    best = len (path)
+            else:
+                # print len (path), vertex, next, path + [next]
+                if len (path) < best:
+                    stack.append((next, path + [next]))
