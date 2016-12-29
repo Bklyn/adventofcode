@@ -90,9 +90,7 @@ def dec(regs, a):
 
 
 def jnz(regs, a, count):
-    if regs[a] != 0:
-        return count
-    return 1
+    return count if regs[a] != 0 else 1
 
 
 def run(tape, regs=[0, 0, 0, 0]):
