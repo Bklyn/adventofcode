@@ -64,42 +64,80 @@ Given your vault's passcode, what is the shortest path (the actual
 path, not just the length) to reach the vault?
 
 Your puzzle input is gdjjyniy.
+
+--- Part Two ---
+
+You're curious how robust this security solution really is, and so you
+decide to find longer and longer paths which still provide access to
+the vault. You remember that paths always end the first time they
+reach the bottom-right room (that is, they can never pass through it,
+only end in it).
+
+For example:
+
+If your passcode were ihgpwlah, the longest path would take 370 steps.
+With kglvqrro, the longest path would be 492 steps long.
+With ulqzkmiv, the longest path would be 830 steps long.
+
+What is the length of the longest path that reaches the vault?
 '''
 
 import md5
 
 def is_open(c):
-    return c < 'b'
+    return c > 'a'
 
-def can_move(seed, path):
-    digest = md5.new (seed + ''.join (path)).hexdigest ()
+def get_moves(seed, path):
+    digest = md5.new (seed + path).hexdigest ()
     return map (is_open, digest[:4])
 
-def dfs_paths(seed, start=(0,0), goal=(4,4)):
-    stack = [(start, [start])]
-    best = 99999999
+def step(spot, direction):
+    x, y = spot
+    if direction == 'U':
+        spot = (x,y-1)
+    elif direction == 'D':
+        spot = (x,y+1)
+    elif direction == 'L':
+        spot = (x-1,y)
+    elif direction == 'R':
+        spot = (x+1,y)
+    else:
+        assert False, 'Invalid direction: ' + direction
+    return spot
+
+def solve(seed, start=(0,0), goal=(3,3)):
+    stack = [(start, '')]
+    best = None
+    worst = 0
     while stack:
-        (vertex, path) = stack.pop()
-        moves = can_move (seed, path)
-        x, y = vertex
-        up, down, left, right = [None] * 4
-        if y > 0 and moves[0]:
-            up = (x, y-1)
-        if moves[1]:
-            down = (x, y+1)
-        if x > 0 and moves[2]:
-            left = (x-1, y)
-        if moves[3]:
-            right = (x+1, y)
-        print vertex, path, moves, [up, down, left, right]
-        for next in set ([up, down, left, right]) - set(path):
-            if next is None:
-                continue
-            if next == goal:
-                if len (path) < best:
-                    yield path + [next]
-                    best = len (path)
+        (x, y), path = stack.pop()
+        valid = get_moves (seed, path)
+        moves = ''
+        if y > 0 and valid[0]:
+            moves += 'U'
+        if valid[1] and y < 3:
+            moves += 'D'
+        if x > 0 and valid[2]:
+            moves += 'L'
+        if valid[3] and x < 3:
+            moves += 'R'
+        # print (x, y), path, valid, moves
+        for move in moves:
+            nxt = step ((x,y), move)
+            # print (x,y), path, move, nxt
+            if nxt == goal:
+                # print best, path + move
+                if best is None or len(path)+1 < len(best):
+                    best = path + move
+                if len(path)+1 > worst:
+                    worst = len(path)+1
             else:
-                # print len (path), vertex, next, path + [next]
-                if len (path) < best:
-                    stack.append((next, path + [next]))
+                # print len (path), vertex, nxt, path + [nxt]
+                stack.append((nxt, path + move))
+    return best, worst
+
+assert solve('ihgpwlah') == ('DDRRRD', 370)
+assert solve('kglvqrro') == ('DDUDRLRRUDRD', 492)
+assert solve('ulqzkmiv') == ('DRURDRUDDLLDLUURRDULRLDUUDDDRR', 830)
+
+print solve ('gdjjyniy')
