@@ -47,6 +47,43 @@ the map at least once?
 '''
 
 import string
+from heapq import heappop, heappush
+
+# Utilities as per Norvig below:
+
+# 2-D points implemented using (x, y) tuples
+def X(point): return point[0]
+def Y(point): return point[1]
+
+def neighbors4(point):
+    "The four neighbors (without diagonals)."
+    x, y = point
+    return ((x+1, y), (x-1, y), (x, y+1), (x, y-1))
+
+def cityblock_distance(p, q=(0, 0)):
+    "City block distance between two points."
+    return abs(X(p) - X(q)) + abs(Y(p) - Y(q))
+
+def astar_search(start, h_func, moves_func):
+    "Find a shortest sequence of states from start to a goal state (a state s with h_func(s) == 0)."
+    frontier  = [(h_func(start), start)] # A priority queue, ordered by path length, f = g + h
+    previous  = {start: None}  # start state has no previous state; other states will
+    path_cost = {start: 0}     # The cost of the best path to a state.
+    while frontier:
+        (f, s) = heappop(frontier)
+        if h_func(s) == 0:
+            return Path(previous, s)
+        for s2 in moves_func(s):
+            new_cost = path_cost[s] + 1
+            if s2 not in path_cost or new_cost < path_cost[s2]:
+                heappush(frontier, (new_cost + h_func(s2), s2))
+                path_cost[s2] = new_cost
+                previous[s2] = s
+    return dict(fail=True, front=len(frontier), prev=len(previous))
+
+def Path(previous, s):
+    "Return a list of states that lead to state s, according to the previous dict."
+    return ([] if (s is None) else Path(previous, previous[s]) + [s])
 
 def readmaze(fn):
     maze = []
@@ -62,50 +99,30 @@ def readmaze(fn):
             y = y + 1
     return maze, locs
 
-def metric (move, pois):
-    result = 0
-    x, y = move
-    for px, py in pois:
-        result += abs (x - px) + abs (y - py)
-        x, y = px, py
-    return result
+maze = None
+zero = None
 
-def get_moves (loc, maze, pois):
-    x, y = loc
-    moves = []
-    if x > 0 and maze[y][x-1] != '#':
-        moves.append ((x-1, y))
-    if x < len (maze[y]) and maze[y][x+1] != '#':
-        moves.append ((x+1, y))
-    if y > 0 and maze[y-1][x] != '#':
-        moves.append ((x, y-1))
-    if y < len (maze) and maze[y+1][x] != '#':
-        moves.append ((x, y+1))
-    return moves
+def metric (state):
+    _, visited = state
+    return 8 - len (visited)
 
-def solve (maze, locs):
-    start = locs.pop ('0')
-    pois = set (locs.values())
-    stack = [(start, pois, [start])]
-    best = None
-    while stack:
-        (x, y), pois, path = stack.pop()
-        moves = get_moves ((x, y), maze, pois)
-        if not moves:
-            print 'Dead-end:', path, len(stack)
-        for move in sorted (set (moves) - set (path), key=lambda x: metric(x, pois)):
-            if move in pois:
-                pois.remove (move)
-                print len(pois), move, len(path), len(stack)
-            if not len (pois):
-                if best is None or len (path) + 1 < len (best):
-                    best = path + [move]
-                    print 'Candidate:', len (best), best
-            else:
-                stack.append ((move, set(pois), path + [move]))
-    return best
+def metric2 (state):
+    pos, visited = state
+    return 8 - len (visited) + cityblock_distance(pos, zero)
+    pass
+
+def moves (state):
+    pos, visited = state
+    for x1, y1 in neighbors4(pos):
+        c = maze[y1][x1]
+        if c != '#':
+            visited1 = (visited if c in visited or c == '.' else ''.join(sorted(visited+c)))
+            yield (x1, y1), visited1
 
 maze, locs = readmaze ('24.txt')
 print 'Locations:', locs
-best = solve (maze, locs)
-print 'Solution:', len(best), best
+zero = locs.pop ('0')
+path = astar_search ((zero, '0'), metric, moves)
+print len(path)-1
+path = astar_search ((zero, '0'), metric2, moves)
+print len(path)-1
