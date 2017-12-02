@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import itertools
-import numpy
 
 INPUT='''
 179	2358	5197	867	163	4418	3135	5049	187	166	4682	5080	5541	172	4294	1397
