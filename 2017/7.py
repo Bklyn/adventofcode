@@ -106,23 +106,31 @@ weight need to be to balance the entire tower?
 Although it hasn't changed, you can still get your puzzle input.
 '''
 
-from collections import namedtuple, defaultdict
+from collections import defaultdict
+from itertools import groupby
 
 
 class Node:
-    def __init__(self, weight=-1, children=set()):
-        self.children = children
-        self.weight = weight
-        self.totwgt = weight
+    def __init__(self):
+        self.name = None
+        self.children = []
+        self.weight = 0
+        self.totwgt = 0
         self.parent = None
 
+    def __str__(self):
+        return '%s (%d / %d)' % (self.name, self.weight, self.totwgt)
 
-def calc_weight(graph, name):
+
+def calc_weight(node):
     total = 0
-    node = graph[name]
-    for name in node.children:
-        total += calc_weight (graph, name)
+    for c in node.children:
+        total += calc_weight(c)
     return total + node.weight
+
+
+def find_unbalanced(graph, node):
+    pass
 
 
 def make_graph(lines):
@@ -132,48 +140,48 @@ def make_graph(lines):
         assert paren > 0, 'Malformed input: %s' % line
         name = line[:paren].strip()
         node = graph[name]
-        weight = int(line[paren + 1:line.find(')')])
-        node.weight = weight
+        node.name = name
+        node.weight = int(line[paren + 1:line.find(')')])
         arrow = line.find(' -> ')
         if arrow > 0:
-            node.children = set(line[arrow + 4:].split(', '))
-            for k in node.children:
-                kn = graph[k]
-                kn.parent = name
-    for k, n in graph.iteritems():
-        n.totwgt = calc_weight (graph, k)
+            names = set(line[arrow + 4:].split(', '))
+            node.children = [graph[c] for c in names]
+            for c in node.children:
+                c.parent = node
+    for n in graph.itervalues():
+        n.totwgt = calc_weight(n)
+
     return graph
 
 
 def find_root(graph):
-    root = None
-    for name, node in graph.iteritems():
-        if not node.parent:
-            root = name
-            break
-    return root
+    root = [x for x in graph.itervalues() if x.parent is None]
+    assert len(root) == 1
+    return root[0]
 
 
-def solve (graph, name):
-    root = graph[name]
-    weights = {}
-    for child in root.children:
-        node = graph[child]
-        weight = node.totwgt
-        if not weight in weights:
-            weights[weight] = set ([child])
-        else:
-            weights[weight].add (child)
-    bad = [(k, v) for k, v in weights.iteritems () if len(v) == 1]
-    if not len (bad):
-        return
-    badwgt, badnode = bad[0][0], list(bad[0][1])[0]
-    goodwgt, goodnodes = [(k, v) for k, v in weights.iteritems () if len(v) > 1][0]
-    # print badwgt, goodwgt, badnode, graph[badnode].weight, zip (goodnodes, [calc_weight (graph, n) for n in goodnodes])
-    # print [(w, names) for w, names in weights.iteritems() if len(names) > 1]
-    diff = goodwgt - badwgt
-    print badnode, graph[badnode].weight, diff, graph[badnode].weight + diff
-    solve (graph, badnode)
+def odd_weight(node):
+    def by_weight(node): return node.totwgt
+    data = sorted(node.children, key=by_weight)
+    for k, g in groupby(data, by_weight):
+        l = list(g)
+        if len(l) == 1:
+            return l[0]
+    return None
+
+
+def solve(node):
+    if node is None:
+        return node
+    oddball = odd_weight(node)
+    # print node, oddball
+    if oddball is None:
+        idealwgt = [n.totwgt for n in node.parent.children if n.totwgt != node.totwgt]
+        # print node, node.weight, '->', node.weight + (idealwgt[0] - node.totwgt)
+        # return node
+        return node.weight + (idealwgt[0] - node.totwgt)
+    return solve(oddball)
+
 
 TEST = '''pbga (66)
 xhth (57)
@@ -190,13 +198,14 @@ gyxo (61)
 cntj (57)'''
 
 TEST_GRAPH = make_graph(TEST.split('\n'))
-assert find_root(TEST_GRAPH) == 'tknk'
-assert calc_weight (TEST_GRAPH, 'ugml') == 251
-assert calc_weight (TEST_GRAPH, 'padx') == 243
+assert find_root(TEST_GRAPH).name == 'tknk'
+assert TEST_GRAPH['ugml'].totwgt == 251
+assert TEST_GRAPH['padx'].totwgt == 243
+assert solve (find_root(TEST_GRAPH)) == 60
 
 lines = [line.strip() for line in open('7.txt').readlines()]
 graph = make_graph(lines)
-root = find_root (graph)
-print root
+root = find_root(graph)
+print root.name
 
-solve (graph, root)
+print solve(root)
