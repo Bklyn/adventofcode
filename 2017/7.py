@@ -121,16 +121,15 @@ class Node:
     def __str__(self):
         return '%s (%d / %d)' % (self.name, self.weight, self.totwgt)
 
-
 def calc_weight(node):
     total = 0
     for c in node.children:
-        total += calc_weight(c)
+        if not c.children:
+            c.totwgt = c.weight
+        else:
+            c.totwgt = calc_weight (c)
+        total += c.totwgt
     return total + node.weight
-
-
-def find_unbalanced(graph, node):
-    pass
 
 
 def make_graph(lines):
@@ -148,8 +147,7 @@ def make_graph(lines):
             node.children = [graph[c] for c in names]
             for c in node.children:
                 c.parent = node
-    for n in graph.itervalues():
-        n.totwgt = calc_weight(n)
+    calc_weight (find_root (graph))
 
     return graph
 

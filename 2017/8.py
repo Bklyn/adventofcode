@@ -44,6 +44,8 @@ register during this process so that it can decide how much memory to
 allocate to these operations. For example, in the above instructions,
 the highest value ever held was 10 (in register c after the third
 instruction was evaluated).
+
+Your puzzle answer was 6419.
 '''
 
 import operator
@@ -59,9 +61,9 @@ def run(lines):
     for line in lines:
         reg, insn, amt, _, ref, op, val = line.split()
         insn,  op = ops[insn], ops[op]
-        # print '%-4s %s %5d %-4s %-3s %5d' % (reg, insn, int(amt), ref, op, int(val))
-        if op (regs.get (ref, 0), int (val)):
-            val = regs[reg] = insn (regs.get (reg, 0), int (amt))
+        val, amt = int (val), int(amt)
+        if op (regs.get (ref, 0), val):
+            val = regs[reg] = insn (regs.get (reg, 0), amt)
             maxval = max (val, maxval)
 
     return regs, maxval
