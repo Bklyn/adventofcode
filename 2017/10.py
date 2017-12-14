@@ -146,7 +146,6 @@ AoC 2017 becomes 33efeb34ea91902bb2f59c9920caa6cd.
 Treating your puzzle input as a string of ASCII characters, what is
 the Knot Hash of your puzzle input? Ignore any leading or trailing
 whitespace you might encounter.
-
 '''
 
 import operator
