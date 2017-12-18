@@ -1,3 +1,5 @@
 # Any executables made from day.cpp
 [0-9]
 [12][0-9]
+__pycache__/
+.ipynb_checkpoints/
