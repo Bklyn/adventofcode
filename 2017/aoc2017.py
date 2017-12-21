@@ -210,7 +210,7 @@ def neighbors8(point):
             (x-1, y+1), (x, y+1), (x+1, y+1))
 
 def cityblock_distance(p, q=origin):
-    "Manhatten distance between two points."
+    "Manhattan distance between two points."
     return abs(X(p) - X(q)) + abs(Y(p) - Y(q))
 
 def distance(p, q=origin):
