@@ -91,8 +91,7 @@ def moves(path, ports):
         open_port = node[0] if node[0] not in prev else node[1]
     else:
         open_port = 0
-    return [p for p in ports
-            if p not in path and open_port in p]
+    return ports.get(open_port, set()) - set(path)
 
 
 def score(path):
@@ -102,18 +101,22 @@ def score(path):
 
 
 def search(ports):
-    stack = [((0, 0), [(0, 0)])]
+    by_port = defaultdict(set)
+    for p in ports:
+        by_port[p[0]].add(p)
+        by_port[p[1]].add(p)
+    stack = [[(0, 0)]]
     strongest = 0
     longest = (0, 0)
     while stack:
-        (node, path) = stack.pop()
+        path = stack.pop()
         sc = score(path)
         if sc > strongest:
             strongest = sc
         if len(path) >= longest[0]:
             longest = (len(path), max(sc, longest[1]))
-        for x in moves(path, ports):
-            stack.append((x, path + [x]))
+        for x in set(moves(path, by_port)):
+            stack.append(path + [x])
     return (strongest, longest[1])
 
 
