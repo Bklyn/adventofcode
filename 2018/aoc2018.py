@@ -36,7 +36,7 @@ def Input(day):
     except FileNotFoundError:
         return urllib.request.urlopen(
             # Short URL to the raw GitHub content for this project
-            'https://tinyurl.com/yamsqgej/' + filename)
+            'https://tinyurl.com/y9pc7q66/' + filename)
 
 
 def array(lines):
