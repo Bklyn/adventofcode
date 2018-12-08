@@ -118,23 +118,79 @@ long will it take to complete all of the steps?
 
 from aoc2018 import *
 from collections import defaultdict
+import io
 
 
-def solve(deps):
+def parse_deps(input):
+    deps = defaultdict(set)
+    for line in input:
+        tokens = line.split(' ')
+        node1, node2 = tokens[1], tokens[7]
+        deps[node2].add(node1)
+    return deps
+
+
+def solve(deps, num_elves=1, cost_func=None):
+    order = []
+    workers = [(0, None)] * num_elves
+    active = set()
+    time = 0
+    # Add empty entries for nodes that depend on nothing
     deps.update(dict((item, set())
                      for key, dep in deps.items() for item in dep if not item in deps))
     while deps:
-        nodep = first(
-            sorted(key for key, dep in sorted(deps.items()) if not dep))
-        yield nodep
-        deps = {key: (dep - set([nodep]))
-                for key, dep in deps.items() if key != nodep}
+        # Wait for work to complete; time marches on
+        wactive = [x for x in workers if x[1] is not None]
+        work = min(wactive, key=lambda x: x[0], default=(0, None))
+        if work[1] is not None:
+            time, step = work
+            # Free up waiters
+            deps = {key: (dep - set([step]))
+                    for key, dep in deps.items() if key != step}
+            # print('time=%s deps=%s finished=%s' % (time, len(deps), step))
+            order.append(step)
+            active.discard(step)
+            if not deps:
+                break
+            worker = workers.index(work)
+            workers[worker] = (time, None)
+        # Schedule work
+        available = [idx for idx in range(
+            num_elves) if workers[idx][1] is None]
+        while available:
+            step = first(
+                key for key, dep in sorted(deps.items()) if not dep and key not in active)
+            if step is None:
+                # Need to wait again
+                break
+            cost = 0 if cost_func is None else cost_func(step)
+            worker, available = available[0], available[1:]
+            # print('time=%d deps=%s step=%s cost=%s will_finish=%s worker=%s available=%s active=%s' % (
+            # time, len(deps), step, cost, time + cost, worker, available,
+            # active))
+            workers[worker] = (time + cost, step)
+            active.add(step)
+
+    return time, order
 
 
-deps = defaultdict(set)
-for line in Input(7):
-    tokens = line.split(' ')
-    node1, node2 = tokens[1], tokens[7]
-    deps[node2].add(node1)
+example = io.StringIO(
+    '''Step C must be finished before step A can begin.
+Step C must be finished before step F can begin.
+Step A must be finished before step B can begin.
+Step A must be finished before step D can begin.
+Step B must be finished before step E can begin.
+Step D must be finished before step E can begin.
+Step F must be finished before step E can begin.''')
 
-print(''.join(solve(deps)))
+assert solve(parse_deps(example)) == (0, list('CABDFE'))
+example.seek(0)
+assert solve(parse_deps(example), num_elves=2,
+             cost_func=lambda x: 1 + ord(x) - ord('A')) == (15, list('CABFDE'))
+
+deps = parse_deps(Input(7))
+time, order = solve(deps)
+print(''.join(order))
+time, order = solve(deps, num_elves=5,
+                    cost_func=lambda x: 61 + ord(x) - ord('A'))
+print(time)
