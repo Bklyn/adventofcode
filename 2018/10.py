@@ -212,7 +212,7 @@ def bounding_box(points):
 
 def picture_size(points):
     bb = bounding_box(points)
-    size = (X(bb[1]) - X(bb[0])) * (Y(bb[1]) - Y(bb[0]))
+    size = (X(bb[1]) - X(bb[0]) + 1) * (Y(bb[1]) - Y(bb[0]) + 1)
     return size
 
 
