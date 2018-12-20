@@ -214,6 +214,11 @@ class Forest(dict):
                 p = Point(y, x)
                 self[Point(y, x)] = c
         self.shape = (rows, cols)
+        self.counts = Counter(c for c in self.values())
+        self.ticks = 0
+        self.seen = {}
+        self.chain = []
+        self.encoded = self.encode()
 
     def dump(self):
         rows, cols = self.shape
@@ -221,33 +226,58 @@ class Forest(dict):
             line = [self.get(Point(y, x), '%') for x in range(cols)]
             print(''.join(line))
 
+    def encode(self):
+        return ''.join(self.values())
+
+    @staticmethod
+    def calc_score(ctr):
+        return ctr[TREE] * ctr[YARD]
+
     def score(self):
-        count = Counter(t for p, t in self.items())
-        return count.get(TREE, 0) * count.get(YARD, 0)
+        return self.calc_score(self.counts)
 
     def tick(self):
-        snap = dict((k, v) for k, v in self.items())
-        for point, glyph in snap.items():
-            neighbors = Counter(snap[n] for n in point.neighbors if n in snap)
+        changes = []
+        for point, glyph in self.items():
+            neighbors = Counter(self[n] for n in point.neighbors if n in self)
             if glyph == OPEN and neighbors.get(TREE, 0) >= 3:
-                glyph = TREE
+                changes.append((point, TREE))
             elif glyph == TREE and neighbors.get(YARD, 0) >= 3:
-                glyph = YARD
+                changes.append((point, YARD))
             elif glyph == YARD and not (
                     neighbors.get(YARD, 0) >= 1
                     and neighbors.get(TREE, 0) >= 1):
-                glyph = OPEN
+                changes.append((point, OPEN))
+        for point, glyph in changes:
+            self.counts.update({self[point]: -1, glyph: 1})
             self[point] = glyph
+        self.encoded = self.encode()
+        return len(changes)
 
     def solve(self, ticks=10, verbose=False):
-        if verbose:
-            self.dump()
-        for tick in range(ticks):
-            self.tick()
-            if verbose:
-                self.dump()
+        for tick in range(ticks - self.ticks):
+            self.ticks += 1
+            before = self.encoded
+            idx = self.seen.get(before, None)
+            if idx is not None:
+                # We found a cycle
+                cycle_begin = idx
+                cycle_len = self.ticks - cycle_begin
+                offset = cycle_begin + (ticks - cycle_begin - 1) % cycle_len
+                final = self.chain[offset]
+                self.counts = Counter(x for x in final)
+                print(self.ticks, idx, cycle_len, offset,
+                      self.counts, self.score(), final)
+                break
+            changes = self.tick()
+            print(self.ticks, changes, self.counts, self.score())
+            self.chain.append(self.encoded)
+            self.seen[before] = len(self.chain)
+            assert len(self.chain) == self.ticks
 
 
 f = Forest(Input(18))
 f.solve()
+print(f.score())
+f.solve(1000000000)
 print(f.score())
