@@ -478,29 +478,40 @@ class Cave(dict):
         def moves(pq):
             pos, equipment = pq
             my_gear_options = gear_options(self.get_type(pos))
+            assert equipment in my_gear_options
             x, y = pos
-            for (dx, dy) in ((0, -1), (-1, 0), (1, 0), (0, 1)):
+            for (dx, dy) in ((0, 0), (0, -1), (-1, 0), (1, 0), (0, 1)):
                 if y + dy < 0 or x + dx < 0:
+                    continue
+                if x + dx > self.target[0] + 10:
                     continue
                 newpos = (x + dx, y + dy)
                 rtype = self.get_type(newpos)
-                for eq in [eq for eq in gear_options(rtype) if eq in my_gear_options]:
-                    print('move', pq, '->', (newpos, eq))
-                    yield (newpos, eq)
+                new_gear_options = gear_options(rtype)
+                if equipment not in new_gear_options:
+                    continue
+                elif pos == newpos:
+                    for eq in [x for x in my_gear_options if x != equipment]:
+                        # print('equip', pq, '->', (newpos, eq))
+                        yield (pos, eq)
+                else:
+                    # print('move', pq, '->', (newpos, equipment))
+                    yield (newpos, equipment)
 
         def cost(p1, p2):
             # print('cost', p1, p2)
-            total = 0
             if p1[0] != p2[0]:
-                total = 1
-            if p1[-1] != p2[-1]:  # Need to change equipment
-                total += 7
-            return total
+                return 1
+            elif p1[-1] != p2[-1]:  # Need to change equipment
+                return 7
+            assert False
 
         path = Astar(((0, 0), torch), moves, lambda s: (
-            0 if s[0] == self.target else 1), cost)
+            0 if s == (self.target, torch) else 1), cost)
+        print(len(path), path)
         scores = [cost(p1, p2)
-                  for p1, p2 in pairwise(path + [(self.target, torch)])]
+                  for p1, p2 in pairwise(path)]  # + [(self.target, torch)])]
+        print(len(scores), scores, sum(scores))
         return sum(scores)
 
 
