@@ -126,7 +126,7 @@ def findscore(recipes, target, startidx=0):
     return (idx, False)
 
 
-def solve(input):
+def solve(input, partone=False):
     rounds = int(input)
     scores = [int(x) for x in input]
     startidx = 0
@@ -135,18 +135,24 @@ def solve(input):
     elves = (0, 1)
     while not found:
         recipes, elves = cook(recipes, elves)
-        startidx, found = findscore(recipes, scores, startidx)
+        if partone:
+            if len(recipes) >= rounds + 10:
+                return recipes
+        else:
+            startidx, found = findscore(recipes, scores, startidx)
     return startidx
 
 
-recipes = [3, 7]
-elves = (0, 1)
-while len(recipes) < 47801 + 10:
-    recipes, elves = cook(recipes, elves)
+# recipes = [3, 7]
+# elves = (0, 1)
+# while len(recipes) < 47801 + 10:
+#     recipes, elves = cook(recipes, elves)
 
+Input = '047801'
+recipes = solve(Input, partone=True)
 assert score(recipes, 5) == '0124515891'
 assert score(recipes, 18) == '9251071085'
 assert score(recipes, 2018) == '5941429882'
-print(len(recipes), score(recipes, 47801))
+print(score(recipes, int(Input)))
 
-print(solve('047801'))
+print(solve(Input))
