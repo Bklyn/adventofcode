@@ -174,9 +174,11 @@ What is the diagnostic code for system ID 5?
 
 from aoc import *
 
-OPLEN = { 1: 4, 2: 4, 3: 2, 4: 2, 5: 3, 6: 3, 7: 4, 8: 4 }
 
-def run(tape, input=[1], debug=False):
+def Intcode(tape, input=[1], debug=False):
+    ADD, MUL, STO, OUT, JNZ, JZ, LT, EQ, BRK = 1, 2, 3, 4, 5, 6, 7, 8, 99
+    OPLEN = {ADD: 4, MUL: 4, STO: 2, OUT: 2, JNZ: 3, JZ: 3, LT: 4, EQ: 4, BRK: 1}
+
     ip = 0
     tape = tape[:]
     output = []
@@ -186,68 +188,67 @@ def run(tape, input=[1], debug=False):
             return tape[addr]
         return addr
 
-    while tape[ip] != 99:
+    def fetch(args, amode):
+        return [get(arg, mode) for arg, mode in zip(args, amode)]
+
+    while ip < len(tape):
         insn = tape[ip]
         amode, opcode = insn // 100, insn % 100
         oplen = OPLEN[opcode]
-        args = tape[ip+1:ip+oplen]
+        args = tape[ip + 1 : ip + oplen]
+        amode = [amode % 10, (amode // 10) % 10, 1]
         if debug:
             print(
-                "ip={} insn={} amode={} opcode={} oplen={} args={}".format(
-                    ip, insn, amode, opcode, oplen, args
-                ))
-        assert ip + oplen <= len(tape) and amode >= 0 and amode <= 11
-        amode = [amode % 10, (amode // 10) % 10, 0]
-        if opcode == 1:
-            a, b, dest = args
-            tape[dest] = get(a, amode[0]) + get(b, amode[1])
-        elif opcode == 2:
-            a, b, dest = args
-            tape[dest] = get(a, amode[0]) * get(b, amode[1])
-        elif opcode == 3:
-            assert len(input) > 0
+                "ip={} insn={} amode={} opcode={} oplen={} args={}/{}".format(
+                    ip, insn, amode, opcode, oplen, args, fetch(args, amode)
+                )
+            )
+        # Always use immediate addressing for STO
+        args = fetch(args, amode) if opcode != STO else args
+        if opcode == ADD:
+            tape[args[2]] = args[0] + args[1]
+        elif opcode == MUL:
+            tape[args[2]] = args[0] * args[1]
+        elif opcode == STO:
             tape[args[0]] = input[0]
             input = input[1:]
-        elif opcode == 4:
-            val = get(args[0], amode[0])
-            output.append(val)
-        elif opcode == 5 or opcode == 6:
-            val = get(args[0], amode[0])
-            if (opcode == 5 and val) or (opcode == 6 and not val):
-                ip = get(args[1], amode[1])
+        elif opcode == OUT:
+            output.append(args[0])
+        elif opcode == JNZ or opcode == JZ:
+            val = args[0]
+            if (opcode == JNZ and val) or (opcode == JZ and not val):
+                ip = args[1]
                 oplen = 0
-        elif opcode == 7 or opcode == 8:
+        elif opcode == LT or opcode == EQ:
             a, b, dest = args
-            a = get(a, amode[0])
-            b = get(b, amode[1])
-            val = 0
-            if opcode == 7 and a < b:
-                val = 1
-            elif opcode == 8 and a == b:
-                val = 1
+            val = 1 if (opcode == LT and a < b or opcode == EQ and a == b) else 0
             tape[dest] = val
-        elif opcode == 99:
+        elif opcode == BRK:
             break
         else:
             assert False, "Invalid instruction ip=%d insn=%s" % (ip, insn)
 
         ip += oplen
 
-    return output # , tape
+    assert all(o == 0 for o in output[:-1])
+    return output[-1]
 
-EXAMPLE = [3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,
-1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,
-999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99]
 
-assert run(EXAMPLE, input=[7])[-1] == 999
-assert run(EXAMPLE, input=[8])[-1] == 1000
-assert run(EXAMPLE, input=[100])[-1] == 1001
+# Kept as string so Black won't expanding it to a million lines...
+EXAMPLE = list(
+    vector(
+        """3,21,1008,21,8,20,1005,20,22,107,8,21,20,
+1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,
+1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,
+1105,1,46,98,99"""
+    )
+)
+assert Intcode(EXAMPLE, input=[7]) == 999
+assert Intcode(EXAMPLE, input=[8]) == 1000
+assert Intcode(EXAMPLE, input=[100]) == 1001
 
-# print(run([1101,100,-1,4,0], debug=True))
+
 if __name__ == "__main__":
     tape = list(vector(Input(5).read()))
-    output = run(tape, input=[1])
-    assert all(out == 0 for out in output[:-1])
-    print(output[-1])
-
-    print(run(tape, input=[5])[-1])
+    print(Intcode(tape, input=[1]))
+    print(Intcode(tape, input=[5]))
