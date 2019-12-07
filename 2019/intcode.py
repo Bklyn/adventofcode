@@ -172,66 +172,100 @@ outputs one number, the diagnostic code.
 What is the diagnostic code for system ID 5?
 """
 
-from aoc import *
+from aoc import vector
+
+ADD, MUL, STO, OUT, JNZ, JZ, LT, EQ, BRK = 1, 2, 3, 4, 5, 6, 7, 8, 99
+OPLEN = {ADD: 4, MUL: 4, STO: 2, OUT: 2, JNZ: 3, JZ: 3, LT: 4, EQ: 4, BRK: 1}
 
 
-def Intcode(tape, input=[1], debug=False):
-    ADD, MUL, STO, OUT, JNZ, JZ, LT, EQ, BRK = 1, 2, 3, 4, 5, 6, 7, 8, 99
-    OPLEN = {ADD: 4, MUL: 4, STO: 2, OUT: 2, JNZ: 3, JZ: 3, LT: 4, EQ: 4, BRK: 1}
+class Intcode(object):
+    def __init__(self, tape, input):
+        self.tape = tape[:]
+        self.ip = 0
+        self._input = input
+        self._output = []
+        self._done = False
 
-    ip = 0
-    tape = tape[:]
-    output = []
+    def __str__(self):
+        return "Intcode(id={:x}, input={}, output={})".format(
+            id(self), self.input, self.output
+        )
 
-    def get(addr, mode):
+    @property
+    def input(self):
+        return self._input
+
+    @property
+    def output(self):
+        return self._output
+
+    @output.setter
+    def output(self, output):
+        self._output = output
+
+    def done(self):
+        return self._done
+
+    def get(self, addr, mode):
         if mode == 0:
-            return tape[addr]
+            return self.tape[addr]
         return addr
 
-    def fetch(args, amode):
-        return [get(arg, mode) for arg, mode in zip(args, amode)]
+    def fetch(self, args, amode):
+        return [self.get(arg, mode) for arg, mode in zip(args, amode)]
 
-    while ip < len(tape):
-        insn = tape[ip]
-        amode, opcode = insn // 100, insn % 100
-        oplen = OPLEN[opcode]
-        args = tape[ip + 1 : ip + oplen]
-        amode = [amode % 10, (amode // 10) % 10, 1]
-        if debug:
-            print(
-                "ip={} insn={} amode={} opcode={} oplen={} args={}/{}".format(
-                    ip, insn, amode, opcode, oplen, args, fetch(args, amode)
+    def run(self, debug=False):
+        while not self._done:
+            insn = self.tape[self.ip]
+            amode, opcode = insn // 100, insn % 100
+            oplen = OPLEN[opcode]
+            args = self.tape[self.ip + 1 : self.ip + oplen]
+            amode = [amode % 10, (amode // 10) % 10, 1]
+            if debug:
+                print(
+                    "ip={} insn={} amode={} opcode={} oplen={} args={}/{} input={} output={}".format(
+                        self.ip,
+                        insn,
+                        amode,
+                        opcode,
+                        oplen,
+                        args,
+                        self.fetch(args, amode),
+                        self.input,
+                        self.output,
+                    )
                 )
-            )
-        # Always use immediate addressing for STO
-        args = fetch(args, amode) if opcode != STO else args
-        if opcode == ADD:
-            tape[args[2]] = args[0] + args[1]
-        elif opcode == MUL:
-            tape[args[2]] = args[0] * args[1]
-        elif opcode == STO:
-            tape[args[0]] = input[0]
-            input = input[1:]
-        elif opcode == OUT:
-            output.append(args[0])
-        elif opcode == JNZ or opcode == JZ:
-            val = args[0]
-            if (opcode == JNZ and val) or (opcode == JZ and not val):
-                ip = args[1]
-                oplen = 0
-        elif opcode == LT or opcode == EQ:
-            a, b, dest = args
-            val = 1 if (opcode == LT and a < b or opcode == EQ and a == b) else 0
-            tape[dest] = val
-        elif opcode == BRK:
-            break
-        else:
-            assert False, "Invalid instruction ip=%d insn=%s" % (ip, insn)
+            # Always use immediate addressing for STO
+            args = self.fetch(args, amode) if opcode != STO else args
+            if opcode == ADD:
+                self.tape[args[2]] = args[0] + args[1]
+            elif opcode == MUL:
+                self.tape[args[2]] = args[0] * args[1]
+            elif opcode == STO:
+                if len(self._input) == 0:
+                    # Signal caller need for more input
+                    return None
+                self.tape[args[0]] = self._input.pop(0)
+            elif opcode == OUT:
+                self._output.append(args[0])
+            elif opcode == JNZ or opcode == JZ:
+                val = args[0]
+                if (opcode == JNZ and val) or (opcode == JZ and not val):
+                    self.ip = args[1]
+                    oplen = 0
+            elif opcode == LT or opcode == EQ:
+                a, b, dest = args
+                val = 1 if (opcode == LT and a < b or opcode == EQ and a == b) else 0
+                self.tape[dest] = val
+            elif opcode == BRK:
+                self._done = True
+                break
+            else:
+                assert False, "Invalid instruction ip=%d insn=%s" % (self.ip, insn)
+            self.ip += oplen
 
-        ip += oplen
-
-    assert all(o == 0 for o in output[:-1])
-    return output[-1]
+        # assert all(o == 0 for o in output[:-1])
+        return self._output[-1]
 
 
 # Kept as string so Black won't expanding it to a million lines...
@@ -243,6 +277,7 @@ EXAMPLE = list(
 1105,1,46,98,99"""
     )
 )
-assert Intcode(EXAMPLE, input=[7]) == 999
-assert Intcode(EXAMPLE, input=[8]) == 1000
-assert Intcode(EXAMPLE, input=[100]) == 1001
+
+assert Intcode(EXAMPLE, input=[7]).run() == 999
+assert Intcode(EXAMPLE, input=[8]).run() == 1000
+assert Intcode(EXAMPLE, input=[100]).run() == 1001
