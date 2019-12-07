@@ -154,28 +154,58 @@ from intcode import Intcode
 from itertools import permutations
 
 
-def run(tape):
+def amplify(tape, phases):
     result = 0
-    for perm in permutations([0, 1, 2, 3, 4]):
-        output = 0
+    for perm in permutations(phases):
+        amps = []
+        prev = None
         for phase in perm:
-            output = Intcode(tape, input=[phase, output])
-        if output > result:
-            result = output
+            amp = Intcode(tape, input=[phase] + ([0] if not prev else []))
+            if prev:
+                prev.output = amp.input
+            amps.append(amp)
+            prev = amp
+        amps[-1].output = amps[0].input
+        idx = -1
+        while not all(amp.done() for amp in amps):
+            idx = (idx + 1) % len(amps)
+            amp = amps[idx]
+            if amp.done():
+                continue
+            out = amp.run()
+            if out is None:
+                # print("Amp {} needs input output={}".format(idx, amp.output))
+                continue
+        result = max(result, amps[-1].output[-1])
+        # print(perm, result)
     return result
 
 
 assert (
-    run(
+    amplify(
         list(
             vector(
                 "3,31,3,32,1002,32,10,32,1001,31,-2,31,1007,31,0,33,1002,33,7,33,1,33,31,31,1,32,31,31,4,31,99,0,0,0"
             )
-        )
+        ),
+        [0, 1, 2, 3, 4],
     )
     == 65210
 )
 
+assert (
+    amplify(
+        list(
+            vector(
+                "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5"
+            )
+        ),
+        [5, 6, 7, 8, 9],
+    )
+    == 139629729
+)
+
 if __name__ == "__main__":
     tape = list(vector(Input(7).read()))
-    print(run(tape))
+    print(amplify(tape, [0, 1, 2, 3, 4]))
+    print(amplify(tape, [5, 6, 7, 8, 9]))
