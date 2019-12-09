@@ -174,8 +174,20 @@ What is the diagnostic code for system ID 5?
 
 from aoc import vector
 
-ADD, MUL, STO, OUT, JNZ, JZ, LT, EQ, BRK = 1, 2, 3, 4, 5, 6, 7, 8, 99
-OPLEN = {ADD: 4, MUL: 4, STO: 2, OUT: 2, JNZ: 3, JZ: 3, LT: 4, EQ: 4, BRK: 1}
+ADD, MUL, STO, OUT, JNZ, JZ, LT, EQ, BASE, BRK = 1, 2, 3, 4, 5, 6, 7, 8, 9, 99
+OPLEN = {ADD: 4, MUL: 4, STO: 2, OUT: 2, JNZ: 3, JZ: 3, LT: 4, EQ: 4, BASE: 2, BRK: 1}
+OPNAME = {
+    ADD: "ADD",
+    MUL: "MUL",
+    STO: "STO",
+    OUT: "OUT",
+    JNZ: "JNZ",
+    JZ: "JZ",
+    LT: "LT",
+    EQ: "EQ",
+    BASE: "BASE",
+    BRK: "BRK",
+}
 
 
 class Intcode(object):
@@ -185,6 +197,7 @@ class Intcode(object):
         self._input = input
         self._output = []
         self._done = False
+        self._base = 0
 
     def __str__(self):
         return "Intcode(id={:x}, input={}, output={})".format(
@@ -207,56 +220,76 @@ class Intcode(object):
         return self._done
 
     def get(self, addr, mode):
-        if mode == 0:
-            return self.tape[addr]
-        return addr
+        if mode == 1:
+            return addr
+        if mode == 2:
+            addr += self._base
+        if addr >= len(self.tape):
+            self.tape.extend([0] * (addr - len(self.tape) + 1))
+        return self.tape[addr]
 
-    def fetch(self, args, amode):
-        return [self.get(arg, mode) for arg, mode in zip(args, amode)]
+    def addr(self, addr, mode):
+        if mode == 0:
+            return addr
+        if mode == 1:
+            return None
+        if mode == 2:
+            return addr + self._base
+        assert "Invalid mode {}".format(mode)
+
+    def sto(self, addr, val):
+        if addr >= len(self.tape):
+            self.tape.extend([0] * (addr - len(self.tape) + 1))
+            assert len(self.tape) == addr + 1
+        self.tape[addr] = val
+        return val
 
     def run(self, debug=False):
         while not self._done:
             insn = self.tape[self.ip]
+            assert insn >= 0
             amode, opcode = insn // 100, insn % 100
             oplen = OPLEN[opcode]
             args = self.tape[self.ip + 1 : self.ip + oplen]
-            amode = [amode % 10, (amode // 10) % 10, 1]
+            assert amode <= 222
+            amode = [amode % 10, (amode // 10) % 10, (amode // 100) % 10]
+            # parameters with address mode applied
+            addrs = [self.addr(arg, mode) for arg, mode in zip(args, amode)]
+            # values referred to by each parameter
+            data = [self.get(arg, mode) for arg, mode in zip(args, amode)]
             if debug:
                 print(
-                    "ip={} insn={} amode={} opcode={} oplen={} args={}/{} input={} output={}".format(
+                    "{:4} base={:<4}  {}:{:02}  {:<4} {}".format(
                         self.ip,
-                        insn,
-                        amode,
+                        self._base,
+                        "{:03}".format(insn // 100)[::-1],
                         opcode,
-                        oplen,
-                        args,
-                        self.fetch(args, amode),
-                        self.input,
-                        self.output,
+                        OPNAME[opcode],
+                        [tpl for tpl in zip(args, amode, addrs, data)],
                     )
                 )
-            # Always use immediate addressing for STO
-            args = self.fetch(args, amode) if opcode != STO else args
             if opcode == ADD:
-                self.tape[args[2]] = args[0] + args[1]
+                self.sto(addrs[2], data[0] + data[1])
             elif opcode == MUL:
-                self.tape[args[2]] = args[0] * args[1]
+                self.sto(addrs[2], data[0] * data[1])
             elif opcode == STO:
                 if len(self._input) == 0:
                     # Signal caller need for more input
                     return None
-                self.tape[args[0]] = self._input.pop(0)
+                self.sto(addrs[0], self._input.pop(0))
             elif opcode == OUT:
-                self._output.append(args[0])
+                self._output.append(data[0])
             elif opcode == JNZ or opcode == JZ:
-                val = args[0]
+                val = data[0]
                 if (opcode == JNZ and val) or (opcode == JZ and not val):
-                    self.ip = args[1]
+                    self.ip = data[1]
                     oplen = 0
             elif opcode == LT or opcode == EQ:
-                a, b, dest = args
+                a, b = data[:2]
                 val = 1 if (opcode == LT and a < b or opcode == EQ and a == b) else 0
-                self.tape[dest] = val
+                self.sto(addrs[2], val)
+            elif opcode == BASE:
+                self._base += data[0]
             elif opcode == BRK:
                 self._done = True
                 break
