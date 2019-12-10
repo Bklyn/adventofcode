@@ -41,14 +41,7 @@ BIG = 10 ** 999
 def Input(day):
     "Open this day's input file."
     filename = "{}.txt".format(day)
-    try:
-        return open(filename)
-    except FileNotFoundError:
-        return urllib.request.urlopen(
-            # Short URL to the raw GitHub content for this project
-            "https://tinyurl.com/bklyn-aoc-2019/"
-            + filename
-        )
+    return open(filename)
 
 
 def array(lines):
