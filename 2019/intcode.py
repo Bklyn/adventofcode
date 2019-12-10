@@ -301,7 +301,7 @@ class Intcode(object):
         return self._output[-1]
 
 
-# Kept as string so Black won't expanding it to a million lines...
+# Kept as string so Black won't expand it to umpteen lines
 EXAMPLE = list(
     vector(
         """3,21,1008,21,8,20,1005,20,22,107,8,21,20,
