@@ -276,7 +276,8 @@ def parse(lines):
     return asteroids
 
 
-EX1 = """.#..##.###...#######
+EX1 = """
+.#..##.###...#######
 ##.############..##.
 .#.######.########.#
 .###.#######.####.#.
@@ -298,18 +299,20 @@ EX1 = """.#..##.###...#######
 ###.##.####.##.#..##
 """
 
-count, best, zapped = solve(parse(EX1.splitlines()))
-assert count == 210 and best == (11, 13)
-assert zapped[198] == (9, 6)
+count, best, zapped = solve(parse(EX1.strip().splitlines()))
+assert count == 210 and best == (11, 13) and len(zapped) == 299
+assert zapped[:3] == [(11,12), (12,1), (12,2)]
+assert zapped[-1] == (11, 1)
 
-EXAMPLE = """.#....#####...#..
+EXAMPLE = """
+.#....#####...#..
 ##...##.1####..##
 ##...#...#.#####.
 ..#.....X...###..
 ..#.#.....#....##
 """
 
-count, best, zapped = solve(parse(EXAMPLE.splitlines()))
+count, best, zapped = solve(parse(EXAMPLE.strip().splitlines()))
 assert count == 30 and best == (8, 3)
 
 if __name__ == "__main__":
