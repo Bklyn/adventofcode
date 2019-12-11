@@ -165,18 +165,15 @@ def amplify(tape, phases):
                 prev.output = amp.input
             amps.append(amp)
             prev = amp
-        amps[-1].output = amps[0].input
-        idx = -1
-        while not all(amp.done() for amp in amps):
-            idx = (idx + 1) % len(amps)
-            amp = amps[idx]
-            if amp.done():
-                continue
-            out = amp.run()
-            if out is None:
-                # print("Amp {} needs input output={}".format(idx, amp.output))
-                continue
-        result = max(result, amps[-1].output[-1])
+        final = amps[-1]
+        final.output = amps[0].input
+        running = amps[:]
+        while running:
+            for a in running:
+                a.run()
+            running = [a for a in running if not a.done()]
+        assert final.output
+        result = max(result, final.output[-1])
         # print(perm, result)
     return result
 
