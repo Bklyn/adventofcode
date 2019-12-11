@@ -216,6 +216,15 @@ class Intcode(object):
     def output(self, output):
         self._output = output
 
+    def on_input(self):
+        if len(self._input) == 0:
+            # Signal caller need for more input
+            return None
+        return self._input.pop(0)
+
+    def on_output(self):
+        pass
+
     def done(self):
         return self._done
 
@@ -273,12 +282,13 @@ class Intcode(object):
             elif opcode == MUL:
                 self.sto(addrs[2], data[0] * data[1])
             elif opcode == STO:
-                if len(self._input) == 0:
-                    # Signal caller need for more input
-                    return None
-                self.sto(addrs[0], self._input.pop(0))
+                val = self.on_input()
+                if val is None:
+                    return val
+                self.sto(addrs[0], val)  # self._input.pop(0))
             elif opcode == OUT:
                 self._output.append(data[0])
+                self.on_output()
             elif opcode == JNZ or opcode == JZ:
                 val = data[0]
                 if (opcode == JNZ and val) or (opcode == JZ and not val):
