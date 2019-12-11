@@ -109,8 +109,10 @@ from intcode import Intcode
 
 TURNS = {UP: (LEFT, RIGHT), RIGHT: (UP, DOWN), DOWN: (RIGHT, LEFT), LEFT: (DOWN, UP)}
 
+
 def Turn(direction, turn):
     return TURNS[direction][turn]
+
 
 class Robot(Intcode):
     pos_ = origin
@@ -131,24 +133,30 @@ class Robot(Intcode):
             return
         color, turn = self.output[-2:]
         assert color in (0, 1) and turn in (0, 1)
+        # paint, turn, move
         self.hull_[self.pos_] = color
         self.direction_ = Turn(self.direction_, turn)
-        self.pos_ = (X(self.pos_) + X(self.direction_),
-                     Y(self.pos_) + Y(self.direction_))
+        self.pos_ = (
+            X(self.pos_) + X(self.direction_),
+            Y(self.pos_) + Y(self.direction_),
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     tape = list(vector(Input(11).read()))
+    # Part 1
     robot = Robot(tape)
     robot.run()
-    print (len(robot.hull()))
-    robot = Robot(tape, hull={origin: '#'})
+    print(len(robot.hull()))
+
+    # Part 2: first square is white
+    robot = Robot(tape, hull={origin: 1})
     robot.run()
     image = [k for k, v in robot.hull().items() if v]
     minx = min(X(p) for p in image)
     maxx = max(X(p) for p in image)
     miny = min(Y(p) for p in image)
     maxy = max(Y(p) for p in image)
-    # Output from max(Y) to min
+    # Output from top to bottom (Y is reversed)
     for y in reversed(range(miny, maxy + 1)):
-        print (''.join ('#' if (x, y) in image else ' ' for x in range(minx, maxx + 1)))
+        print("".join("#" if (x, y) in image else " " for x in range(minx, maxx + 1)))
