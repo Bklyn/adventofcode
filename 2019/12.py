@@ -211,12 +211,19 @@ Sum of total energy: 290 + 608 + 574 + 468 = 1940
 
 What is the total energy in the system after simulating the moons
 given in your scan for 1000 steps?
+
 --- Part Two ---
-All this drifting around in space makes you wonder about the nature of the universe. Does history really repeat itself? You're curious whether the moons will ever return to a previous state.
 
-Determine the number of steps that must occur before all of the moons' positions and velocities exactly match a previous point in time.
+All this drifting around in space makes you wonder about the nature of
+the universe. Does history really repeat itself? You're curious
+whether the moons will ever return to a previous state.
 
-For example, the first example above takes 2772 steps before they exactly match a previous point in time; it eventually returns to the initial state:
+Determine the number of steps that must occur before all of the moons'
+positions and velocities exactly match a previous point in time.
+
+For example, the first example above takes 2772 steps before they
+exactly match a previous point in time; it eventually returns to the
+initial state:
 
 After 0 steps:
 pos=<x= -1, y=  0, z=  2>, vel=<x=  0, y=  0, z=  0>
@@ -241,22 +248,32 @@ pos=<x= -1, y=  0, z=  2>, vel=<x=  0, y=  0, z=  0>
 pos=<x=  2, y=-10, z= -7>, vel=<x=  0, y=  0, z=  0>
 pos=<x=  4, y= -8, z=  8>, vel=<x=  0, y=  0, z=  0>
 pos=<x=  3, y=  5, z= -1>, vel=<x=  0, y=  0, z=  0>
-Of course, the universe might last for a very long time before repeating. Here's a copy of the second example from above:
+
+Of course, the universe might last for a very long time before
+repeating. Here's a copy of the second example from above:
 
 <x=-8, y=-10, z=0>
 <x=5, y=5, z=10>
 <x=2, y=-7, z=3>
 <x=9, y=-8, z=-3>
-This set of initial positions takes 4686774924 steps before it repeats a previous state! Clearly, you might need to find a more efficient way to simulate the universe.
 
-How many steps does it take to reach the first state that exactly matches a previous state?"""
+This set of initial positions takes 4686774924 steps before it repeats
+a previous state! Clearly, you might need to find a more efficient way
+to simulate the universe.
+
+How many steps does it take to reach the first state that exactly matches a previous state?
+"""
 
 from aoc import *
+import math
+
 
 def energy(moons):
     return sum(
-        sum(abs(x) for x in pos) * sum(abs(v) for v in vel)
-        for pos, vel in moons)
+        sum(abs(p) for p, v in t) * sum(abs(v) for p, v in t)
+        for t in zip(moons[0], moons[1], moons[2])
+    )
+
 
 def deltav(p1, p2):
     if p1 < p2:
@@ -265,41 +282,62 @@ def deltav(p1, p2):
         return -1
     return 0
 
-def add(t1, t2):
-    return tuple(x1 + x2 for x1, x2 in zip(t1, t2))
 
-def grav(m1, m2):
-    return tuple(deltav(p1, p2) for p1, p2 in zip(m1, m2))
-
-def step(moons, debug=False):
+def step1d(dim, debug=False):
     r1 = []
-    for i, (p1, v1) in enumerate(moons):
-        for j, (p2, v2) in enumerate(moons):
+    for i, (p1, v1) in enumerate(dim):
+        for j, (p2, v2) in enumerate(dim):
             if i == j:
                 continue
-            g = grav(p1, p2)
-            v1 = add(v1, g)
             if debug:
-                print(i, j, p1, p2, v1, g, add(v1, g))
+                print(i, j, p1, p2, v1, deltav(p1, p2))
+            v1 += deltav(p1, p2)
         r1.append((p1, v1))
-    r2 = []
-    for p, v in r1:
-        r2.append ((add(p, v), v))
-    return r2
+    return [(p + v, v) for p, v in r1]
+
+
+def step(moons, debug=False):
+    return tuple(step1d(dim, debug) for dim in moons)
+
 
 def parse(input):
-    moons = []
+    moons = [], [], []
     for line in [l.strip() for l in input]:
-        tokens = [t.strip('<').strip('>') for t in line.split(', ')]
-        moon = tuple(int(t.split('=')[1]) for t in tokens)
-        vel = (0,0,0)
-        moons.append((moon, vel))
+        tokens = [t.strip("<").strip(">") for t in line.split(", ")]
+        for i, pos in enumerate(int(t.split("=")[1]) for t in tokens):
+            moons[i].append((pos, 0))
     return moons
+
 
 def run(moons, steps):
     for _ in range(steps):
         moons = step(moons)
     return moons
+
+
+def lcm(a, b):
+    return a * b // math.gcd(a, b)
+
+
+def run2(moons):
+    freq = []
+    for i, dim in enumerate(moons):
+        seen = set()
+        steps = 0
+        while tuple(dim) not in seen:
+            seen.add(tuple(dim))
+            dim = step1d(dim)
+            steps += 1
+        freq.append(steps)
+    return lcm(lcm(freq[0], freq[1]), freq[2])
+
+
+EX1 = """
+<x=-1, y=0, z=2>
+<x=2, y=-10, z=-7>
+<x=4, y=-8, z=8>
+<x=3, y=5, z=-1>
+"""
 
 # [((8, -12, -9), (-7, 3, 0)), ((13, 16, -3), (3, -11, -5)), ((-29, -11, -1), (-3, 7, 4)), ((16, -13, 23), (7, 1, 1))]
 EX2 = """
@@ -309,9 +347,19 @@ EX2 = """
 <x=9, y=-8, z=-3>
 """
 
-assert energy(run(parse(EX2.strip().splitlines()), 100)) == 1940
+EX3 = """
+<x=-8, y=-10, z=0>
+<x=5, y=5, z=10>
+<x=2, y=-7, z=3>
+<x=9, y=-8, z=-3>
+"""
 
-if __name__ == '__main__':
+assert energy(run(parse(EX2.strip().splitlines()), 100)) == 1940
+assert run2(parse(EX1.strip().splitlines())) == 2772
+assert run2(parse(EX3.strip().splitlines())) == 4686774924
+
+if __name__ == "__main__":
     moons = parse(Input(12).readlines())
     # print (moons)
-    print (energy(run(moons, 1000)))
+    print(energy(run(moons, 1000)))
+    print(run2(moons))
