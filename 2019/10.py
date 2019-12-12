@@ -318,4 +318,7 @@ assert count == 30 and best == (8, 3)
 if __name__ == "__main__":
     asteroids = parse(Input(10).readlines())
     count, best, zapped = solve(asteroids)
-    print(count, zapped[199])
+    print(count)
+    assert len(zapped) >= 200
+    part2 = zapped[199]
+    print(100 * X(part2) + Y(part2))
