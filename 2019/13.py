@@ -59,32 +59,20 @@ from aoc import *
 from intcode import Intcode
 import random
 
-class Game(Intcode):
-    score_ = 0
-    ball_ = None
-    dir_ = None
-    paddle_ = None
 
+class Game(Intcode):
     def __init__(self, tape):
         super(Game, self).__init__(tape, input=[])
+        self.score_ = 0
+        self.blocks_ = 0
+        self.ball_ = None
+        self.paddle_ = None
         self.tiles_ = {}
 
-    def screen(self):
-        return self.tiles_
-
     def blocks(self):
-        return sum(t == 2 for t in self.tiles_.values())
-
-    def display(self):
-        b  = self.blocks()
-        # print ("SCORE: {} BLOCKS: {} BALL: {} PDL: {}".format(self.score_, b, self.ball_, self.paddle_))
-        if b == 0:
-            self.done_ = True
-        return b
+        return self.blocks_
 
     def on_input(self):
-        if self.display() == 0:
-            return None
         dx = X(self.ball_) - X(self.paddle_)
         return 1 if dx > 0 else -1 if dx < 0 else 0
 
@@ -92,21 +80,29 @@ class Game(Intcode):
         if len(self.output) % 3:
             return
         x, y, tile = self.output[-3:]
-        if x == -1 and y == 0:
+        pos = (x, y)
+        if pos == (-1, 0):
             self.score_ = tile
-            self.display()
             return
-        self.tiles_[(x,y)] = tile
+        orig = self.tiles_.get(pos, 0)
+        self.tiles_[pos] = tile
+        if orig == 2 or tile == 2:
+            self.blocks_ += (tile == 2) - (orig == 2)
+            assert self.blocks_ == sum(t == 2 for t in self.tiles_.values())
         if tile == 3:
-            self.paddle_ = (x,y)
+            self.paddle_ = pos
         if tile == 4:
-            self.ball_ = (x, y)
+            self.ball_ = pos
+
 
 if __name__ == "__main__":
     tape = list(vector(Input(13).read()))
+    # Part 1: how many blocks?
     game = Game(tape)
     game.run()
-    print (len([b for b in game.screen().values() if b == 2]))
+    print(game.blocks())
+
+    # Part 2: play the game
     tape[0] = 2
     game = Game(tape)
     game.run()
