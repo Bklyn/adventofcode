@@ -188,41 +188,31 @@ class Droid(Intcode):
                     glyph = "D"
                 elif pos == origin:
                     glyph = "X"
-                else:
-                    d, p = next(((d, p) for d, p in self.path_ if p == pos), (0, None))
-                    if d > 0:
-                        glyph = ".||--"[d]
+                elif pos in (p for d, p in self.path_):
+                    glyph = "/"
                 line.append(glyph)
             print("".join(line))
 
     def on_input(self):
-        # Discovery mode: explore the whole maze until we find Oxygen
-        pos = self.path_[-1][1] if len(self.path_) else origin
+        pos = self.path_[-1][1] if self.path_ else origin
         for direction in [1, 2, 3, 4]:
             move = MOVES[direction]
             neighbor = (X(pos) + X(move), Y(pos) + Y(move))
             if neighbor not in self.maze_:
                 # Have yet to visit this
                 self.path_.append((direction, neighbor))
-                break
-        else:
-            # Backtrack
-            assert len(self.path_)
-            direction, pos = self.path_.pop()
-            if not len(self.path_):
-                # Finished
-                return None
-            self.path_.append((-REVERSE[abs(direction)], self.path_[-1][1]))
-        return abs(self.path_[-1][0])
+                return direction
+        # Backtrack
+        assert len(self.path_)
+        direction, pos = self.path_.pop()
+        if not len(self.path_):  # Done
+            return None
+        return REVERSE[direction]
 
     def on_output(self):
         result = self.output[-1]
         direction, pos = self.path_[-1]
         assert self.maze_.get(pos, None) in (None, result)
-        if direction < 0:  # We backtracked
-            assert result > 0
-            _d, _p = self.path_.pop()
-            assert _p == pos
         self.maze_[pos] = result
         if result != 0:
             self.pos_ = pos
@@ -233,7 +223,6 @@ class Droid(Intcode):
             self.best_ = min(self.best_, len(self.path_))
 
     def gas(self):
-        print(self.ox_, sum(v for v in self.maze_.values() if v == 1))
         time = 0
         empty = set(p for p, v in self.maze_.items() if v >= 1)
         assert origin in empty
