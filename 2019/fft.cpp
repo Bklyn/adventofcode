@@ -4,9 +4,10 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <numeric>
 
 // There must be a way to do this w/o the brute force inner loop...
-std::string fft(std::string input, int rounds = 1) {
+std::string fft_full(std::string input, int rounds = 1) {
     std::vector<size_t> incsum(input.size() + 1);
     std::string output;
     output.reserve(input.size());
@@ -35,6 +36,39 @@ std::string fft(std::string input, int rounds = 1) {
     return input;
 }
 
+std::string fft(std::string input, int rounds = 1, size_t start = 0)
+{
+    // Fall back to slower method if we are not looking at the end of
+    // the string
+    if (start < input.size() / 2) {
+        return fft_full(input, rounds).substr(start);
+    }
+    // Keep only what we need
+    input = input.substr(start);
+    // Convert '0' -> 0
+    std::vector<size_t> values{};
+    values.reserve(input.size());
+    std::transform(std::begin(input), std::end(input),
+                   std::back_inserter(values),
+                   [](auto c) { return c - '0'; });
+    std::vector<size_t> sum{};
+    sum.reserve(input.size());
+    for (; rounds; --rounds) {
+        sum.clear();
+        std::partial_sum(std::rbegin(values), std::rend(values),
+                         std::back_inserter(sum));
+        values.clear();
+        std::transform(std::rbegin(sum), std::rend(sum),
+                       std::back_inserter(values),
+                       [](auto val) { return val % 10; });
+    }
+    input.clear();
+    std::transform(std::begin(values), std::end(values),
+                   std::back_inserter(input),
+                   [](auto i) { return i + '0'; });
+    return input;
+}
+
 int
 main()
 {
@@ -53,7 +87,5 @@ main()
         longer.append(input);
     }
     size_t offset = std::stol(input.substr(0, 7));
-    assert (offset + 8 < longer.size());
-    auto part2 = fft(longer, 100);
-    std::cout << part2.substr(offset, 8) << std::endl;
+    std::cout << fft(longer, 100, offset).substr(0, 8) << std::endl;
 }
