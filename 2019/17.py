@@ -203,14 +203,14 @@ does the vacuum robot report it has collected?
 from aoc import *
 from intcode import Intcode
 
+UP, DOWN, LEFT, RIGHT = (0, -1), (0, 1), (-1, 0), (1, 0)
+
 TURNS = {
     LEFT: {LEFT: DOWN, RIGHT: UP},
     RIGHT: {LEFT: UP, RIGHT: DOWN},
     UP: {LEFT: LEFT, RIGHT: RIGHT},
     DOWN: {LEFT: RIGHT, RIGHT: LEFT},
 }
-
-TURN_NAMES = {LEFT: "L", RIGHT: "R"}
 
 ROBOT = {"^": UP, "v": DOWN, "<": LEFT, ">": RIGHT}
 
@@ -220,23 +220,81 @@ def calc_turn(h, h2):
     return d
 
 
+def move(p, heading):
+    return (X(p) + X(heading), Y(p) + Y(heading))
+
+
+def pipe_neighbors(p, heading):
+    return (move(p, TURNS[heading][LEFT]), move(p, TURNS[heading][RIGHT]))
+
+
+def render(code):
+    return ",".join(str(x) for x in code)
+
+
+def legal(code):
+    return len(render(code)) <= 20
+
+
+def replace(code, func, repl):
+    result = []
+    i = 0
+    while i < len(code):
+        if code[i : i + len(func)] == list(func):
+            result.append(repl)
+            i += len(func)
+            continue
+        result.append(code[i])
+        i += 1
+    return result
+
+
+def compress(code):
+    import string
+
+    routines = []
+    while not all(c in ("A", "B", "C") for c in code):
+        idx = next(idx for idx, c in enumerate(code) if c in ("L", "R"))
+        for flen in range(4, 12, 2):
+            if (
+                code[idx + flen] not in ("L", "R")
+                or code[idx + flen : idx + flen + 2] == code[idx : idx + 2]
+            ):
+                break
+        func = code[idx : idx + flen]
+        assert all(c in ("L", "R") or type(c) is int for c in code[idx : idx + flen])
+        code = replace(code, func, string.ascii_uppercase[len(routines)])
+        routines.append(func)
+    return (code, routines)
+
+
 class Scaffold(Intcode):
-    def __init__(self, tape):
-        super(Scaffold, self).__init__(tape, input=[])
+    def __init__(self, tape, input=[], display=False):
+        super(Scaffold, self).__init__(tape, input=input)
         self.pos_ = origin
         self.map_ = {}
         self.robot_ = None
+        self.display_ = display
 
     def on_output(self):
-        glyph = chr(self.output[-1])
-        print(glyph, end="")
+        while len(self.output) > 1:
+            self.output.pop(0)
+        val = self.output[-1]
+        if val > 127:
+            return
+        glyph = chr(val)
+        if self.display_:
+            print(glyph, end="")
         if glyph == "\n":
-            self.pos_ = (0, Y(self.pos_) + 1)
-        else:
-            self.map_[self.pos_] = glyph
-            if glyph in "<>^v":
-                self.robot_ = self.pos_
-            self.pos_ = (X(self.pos_) + 1, Y(self.pos_))
+            if X(self.pos_) == 0:
+                self.pos_ = origin
+            else:
+                self.pos_ = (0, Y(self.pos_) + 1)
+            return
+        self.map_[self.pos_] = glyph
+        if glyph in "<>^v":
+            self.robot_ = self.pos_
+        self.pos_ = (X(self.pos_) + 1, Y(self.pos_))
 
     def intersections(self):
         for pos, glyph in self.map_.items():
@@ -245,32 +303,44 @@ class Scaffold(Intcode):
             if all(self.map_.get(n, "") in "#<>^v" for n in neighbors4(pos)):
                 yield pos
 
-    def get_path(self):
+    def get_path(self, debug=False):
         path = [self.robot_]
         code = []
         pos = self.robot_
         heading = ROBOT[self.map_[pos]]
         leg = 0
         while True:
-            print(pos, heading, self.map_.get(pos), leg)
+            assert pos in self.map_ and self.map_.get(pos) != "."
+            if debug:
+                print(
+                    pos,
+                    heading,
+                    self.map_.get(pos),
+                    leg,
+                    move(pos, heading),
+                    pipe_neighbors(pos, heading),
+                )
             path.append(pos)
-            fwd = (X(pos) + X(heading), Y(pos) + Y(heading))
+            fwd = move(pos, heading)
             if self.map_.get(fwd) == "#":
                 leg = leg + 1
                 pos = fwd
                 continue
-            code.append(leg)
+            if leg:
+                code.append(leg)
+            pn = pipe_neighbors(pos, heading)
             next_pipe = [
-                p for p in neighbors4(pos) if p not in path and self.map_.get(p) == "#"
+                p
+                for p in pipe_neighbors(pos, heading)
+                if p not in path and self.map_.get(p) == "#"
             ]
             if not next_pipe:
                 break
-            turn = calc_turn(pos, next_pipe[0])
+            turn = LEFT if (next_pipe[0] == pipe_neighbors(pos, heading)[0]) else RIGHT
             heading = TURNS[heading][turn]
-            print(code[-2:])
-            code.append(TURN_NAMES[turn])
+            code.append("L" if turn == LEFT else "R")
             leg = 0
-        print(code)
+        return code
 
 
 if __name__ == "__main__":
@@ -278,4 +348,12 @@ if __name__ == "__main__":
     scaff = Scaffold(tape)
     scaff.run()
     print(sum(X(p) * Y(p) for p in scaff.intersections()))
-    scaff.get_path()
+    code = scaff.get_path()
+    main, functions = compress(code)
+    program = "\n".join(render(x) for x in [main] + functions) + "\nn\n"
+    # print(program)
+    input = [ord(x) for x in program]
+    tape[0] = 2
+    scaff = Scaffold(tape, input=input)
+    scaff.run()
+    print(scaff.output[-1])
