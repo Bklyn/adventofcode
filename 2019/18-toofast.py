@@ -119,7 +119,13 @@ How many steps is the shortest path that collects all of the keys?
 
 import string
 from aoc import *
-from collections import deque
+from collections import namedtuple
+
+State = namedtuple("State", "pos, path")
+
+
+def fs(*items):
+    return frozenset(items)
 
 
 def parse(lines):
@@ -136,58 +142,41 @@ def parse(lines):
 def solve(maze):
     keys = set(p for p, k in maze.items() if k in string.ascii_lowercase)
     doors = set(p for p, k in maze.items() if k in string.ascii_uppercase)
-    start = next(p for p, k in maze.items() if k == "@")
     always_open = set([".", "@"] + list(string.ascii_lowercase))
 
-    def finished(path):
+    def goal(state):
         # Goal is to visit all keys
-        return set(path) >= keys
+        return 0 if p >= keys else 1
 
-    def moves(path):
-        pos = path[-1]
-        open_doors = set(k.upper() for p, k in maze.items() if p in set(path) & keys)
-        # We can move thru any door we unlocked and any square that contains '.' or '@'
+    def cost(state, s2):
+        pass
+
+    def moves(state):
+        open_doors = set(k.upper() for p, k in maze.items() if p in state.path & keys)
+        # We can move to any door that was opened, or any square that contains '.' or '@'
         accessible = open_doors | always_open
-        print(
-            len(path),
-            pos,
-            open_doors,
-            [
-                (n, maze.get(n), n in path)
-                for n in sorted(neighbors4(pos), key=lambda p: p in path)
-                if maze.get(n) in accessible
-            ],
-        )
-        for n in neighbors4(pos):
+        for n in neighbors4(state.pos):
             if maze.get(n) in accessible:
-                if n not in path:
-                    yield n
+                print(state.pos, open_doors, len(state.path), maze.get(n))
+                yield State(n, state.path | fs(n))
 
-    best = None
-    todo = deque([[start]])
-    while todo:
-        path = todo.pop()
-        if finished(path):
-            if best is None or len(path) < len(best):
-                best = path[:]
-            continue
-        for m in moves(path):
-            todo.append(path + [m])
-
-    return best
+    origin = next(p for p, at in maze.items() if at == "@")
+    return Astar(State(origin, fs()), moves, goal)
 
 
 print(
-    solve(
-        parse(
-            """
+    len(
+        solve(
+            parse(
+                """
 ########################
 #...............b.C.D.f#
 #.######################
 #.....@.a.B.c.d.A.e.F.g#
 ########################
 """.strip().splitlines()
-        )
+            )
+        )[-1].path
     )
 )
 
