@@ -301,36 +301,38 @@ def key_bit(k):
 def solve(maze, debug=False):
     keys = set(p for p, k in maze.items() if k in string.ascii_lowercase)
     doors = set(p for p, k in maze.items() if k in string.ascii_uppercase)
-    start = next(p for p, k in maze.items() if k == "@")
+    robots = tuple(p for p, k in maze.items() if k == "@")
     key_bits = dict(
         (k, key_bit(k)) for k in maze.values() if k in string.ascii_lowercase
     )
     all_bits = sum(key_bits.values())
 
     seen = set()
-    queue = deque([State(start, 0, 0)])
+    queue = deque([State(robots, 0, 0)])
     while queue:
         state = queue.popleft()
         if state.visited == all_bits:
             print("DONE", state)
             return state.len
-        for n in neighbors4(state.pos):
-            glyph = maze.get(n, "#")
-            if glyph == "#":
-                continue
-            seen_key = (n, state.visited)
-            if seen_key in seen:
-                continue
-            if (
-                glyph in string.ascii_uppercase
-                and (state.visited & key_bit(glyph.lower())) == 0
-            ):
-                continue
-            visited = state.visited
-            if glyph in string.ascii_lowercase:
-                visited |= key_bit(glyph)
-            seen.add(seen_key)
-            queue.append(State(n, state.len + 1, visited))
+        for robot in state.pos:
+            for n in neighbors4(robot):
+                glyph = maze.get(n, "#")
+                if glyph == "#":
+                    continue
+                seen_key = (n, state.visited)
+                if seen_key in seen:
+                    continue
+                if (
+                    glyph in string.ascii_uppercase
+                    and (state.visited & key_bit(glyph.lower())) == 0
+                ):
+                    continue
+                visited = state.visited
+                if glyph in string.ascii_lowercase:
+                    visited |= key_bit(glyph)
+                seen.add(seen_key)
+                newstate = tuple(r if r != robot else n for r in state.pos)
+                queue.append(State(newstate, state.len + 1, visited))
 
 
 EX0 = parse(
@@ -356,6 +358,46 @@ EX1 = parse(
 )
 assert solve(EX1) == 132
 
+EX2 = parse(
+    """
+###############
+#d.ABC.#.....a#
+######@#@######
+###############
+######@#@######
+#b.....#.....c#
+###############""".strip().splitlines()
+)
+assert solve(EX2) == 24
+
+EX3 = parse(
+    """
+#############
+#g#f.D#..h#l#
+#F###e#E###.#
+#dCba@#@BcIJ#
+#############
+#nK.L@#@G...#
+#M###N#H###.#
+#o#m..#i#jk.#
+#############""".strip().splitlines()
+)
+assert solve(EX3) == 72, solve(EX3)
+
 if __name__ == "__main__":
     maze = parse(Input(18).read().strip().splitlines())
+    print(solve(maze, debug=True))
+    robot = next(p for p, k in maze.items() if k == "@")
+    for dx, dy, g in (
+        (-1, -1, "@"),
+        (0, -1, "#"),
+        (1, -1, "@"),
+        (-1, 0, "#"),
+        (0, 0, "#"),
+        (1, 0, "#"),
+        (-1, 1, "@"),
+        (0, 1, "#"),
+        (1, 1, "@"),
+    ):
+        maze[(X(robot) + dx, Y(robot) + dy)] = g
     print(solve(maze, debug=True))
