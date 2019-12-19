@@ -133,63 +133,108 @@ def parse(lines):
     return maze
 
 
-def solve(maze):
+accessible = set([".", "@"] + list(string.ascii_lowercase))
+
+
+def solve_one(maze, key, start, open_doors):
+    def goal(pos):
+        return 0 if pos == key else 1
+
+    def moves(pos):
+        for n in neighbors4(pos):
+            glyph = maze.get(n)
+            if glyph not in accessible and glyph not in open_doors:
+                continue
+            yield n
+
+    solved = Astar(start, moves, goal)
+    return solved
+
+
+def calc_opened(maze, keys, path):
+    seen = set()
+    result = []
+    for p in path:
+        if p in seen:
+            continue
+        if p in keys and p not in seen:
+            result.append(maze[p].upper())
+            seen.add(p)
+    return result
+
+
+def solve(maze, debug=False):
     keys = set(p for p, k in maze.items() if k in string.ascii_lowercase)
     doors = set(p for p, k in maze.items() if k in string.ascii_uppercase)
     start = next(p for p, k in maze.items() if k == "@")
-    always_open = set([".", "@"] + list(string.ascii_lowercase))
+    p_to_p = {}
+    for k in keys | set([start]):
+        for j in keys | set([start]):
+            if k == j:
+                continue
+            p_to_p[(k, j)] = len(solve_one(maze, k, j, string.ascii_uppercase))
 
-    def finished(path):
-        # Goal is to visit all keys
-        return set(path) >= keys
-
-    def moves(path):
-        pos = path[-1]
-        open_doors = set(k.upper() for p, k in maze.items() if p in set(path) & keys)
-        # We can move thru any door we unlocked and any square that contains '.' or '@'
-        accessible = open_doors | always_open
-        print(
-            len(path),
-            pos,
-            open_doors,
-            [
-                (n, maze.get(n), n in path)
-                for n in sorted(neighbors4(pos), key=lambda p: p in path)
-                if maze.get(n) in accessible
-            ],
-        )
-        for n in neighbors4(pos):
-            if maze.get(n) in accessible:
-                if n not in path:
-                    yield n
-
+    # State consists of (start point, remaining keys, full path)
+    todo = [(start, keys, [], [])]
     best = None
-    todo = deque([[start]])
+    blen = 10 ** 9
     while todo:
-        path = todo.pop()
-        if finished(path):
-            if best is None or len(path) < len(best):
-                best = path[:]
+        begin, remain, path, opened = todo.pop()
+        if len(path) > blen:
             continue
-        for m in moves(path):
-            todo.append(path + [m])
-
+        if not remain and len(path) < blen:
+            print("BEST", len(path), "".join(opened))
+            best = path
+            blen = len(path)
+            continue
+        for key in sorted(remain, key=lambda p: p_to_p[(begin, p)], reverse=True):
+            key_path = solve_one(maze, key, begin, opened)
+            if key_path is None:
+                continue
+            if debug > 1:
+                print(
+                    blen,
+                    len(todo),
+                    maze[key],
+                    len(remain),
+                    len(path),
+                    len(key_path),
+                    "".join(opened),
+                )
+            todo.append(
+                (
+                    key_path[-1],
+                    remain - set([key]),
+                    path + key_path[1:],
+                    opened + [maze[key].upper()],
+                )
+            )
     return best
 
 
-print(
-    solve(
-        parse(
-            """
+EX0 = parse(
+    """
+########################
+#f.D.E.e.C.b.A.@.a.B.c.#
+######################.#
+#d.....................#
+########################
+""".strip().splitlines()
+)
+
+assert len(solve(EX0)) == 86
+
+EX1 = parse(
+    """
 ########################
 #...............b.C.D.f#
 #.######################
 #.....@.a.B.c.d.A.e.F.g#
 ########################
 """.strip().splitlines()
-        )
-    )
 )
+assert len(solve(EX1)) == 132
 
 if __name__ == "__main__":
-    pass
+    maze = parse(Input(18).read().strip().splitlines())
+    print(len(solve(maze, debug=2)))

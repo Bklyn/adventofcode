@@ -119,13 +119,7 @@ How many steps is the shortest path that collects all of the keys?
 
 import string
 from aoc import *
-from collections import namedtuple
-
-State = namedtuple("State", "pos, path")
-
-
-def fs(*items):
-    return frozenset(items)
+from collections import deque
 
 
 def parse(lines):
@@ -139,49 +133,119 @@ def parse(lines):
     return maze
 
 
-def solve(maze):
+accessible = set([".", "@"] + list(string.ascii_lowercase))
+
+
+def solve_one(maze, key, start, have_keys):
+    def goal(pos):
+        return 0 if pos == key else 1
+
+    def moves(pos):
+        for n in neighbors4(pos):
+            glyph = maze.get(n)
+            if glyph not in accessible and glyph.lower() not in have_keys:
+                continue
+            yield n
+
+    solved = Astar(start, moves, goal)
+    return solved
+
+
+def solve(maze, debug=False):
     keys = set(p for p, k in maze.items() if k in string.ascii_lowercase)
     doors = set(p for p, k in maze.items() if k in string.ascii_uppercase)
-    always_open = set([".", "@"] + list(string.ascii_lowercase))
+    start = next(p for p, k in maze.items() if k == "@")
+    pos_by_key = dict((k, p) for p, k in maze.items() if k in string.ascii_lowercase)
+    key_by_pos = dict((p, k) for p, k in maze.items() if k in string.ascii_lowercase)
+    need_keys = "".join(pos_by_key.keys())
 
-    def goal(state):
-        # Goal is to visit all keys
-        return len(keys - set(state.path))
-
-    def cost(state, s2):
-        return goal(s2) + len(s2.path)
-
-    def moves(state):
-        open_doors = set(
-            k.upper() for p, k in maze.items() if p in set(state.path) & keys
-        )
-        # We can move to any door that was opened, or any square that contains '.' or '@'
-        accessible = open_doors | always_open
-        for n in neighbors4(state.pos):
-            if not maze.get(n) in accessible:
+    p_to_p = {}
+    for k in keys | set([start]):
+        for j in keys:
+            if k == j:
                 continue
-            if n in state.path:
-                continue
-            print(len(state.path), state.pos, open_doors, n, maze.get(n))
-            yield State(n, state.path + tuple([n]))
+            p_to_p[(k, j)] = len(solve_one(maze, k, j, need_keys)) - 1
 
-    origin = next(p for p, at in maze.items() if at == "@")
-    return Astar(State(origin, tuple()), moves, goal)
+    def reachable(pos, keys, debug=False):
+        have_keys = set(need_keys) - set(keys)
+        for k in keys:
+            kpos = pos_by_key[k]
+            path = solve_one(maze, kpos, pos, have_keys)
+            if path:
+                if debug:
+                    print("REACH", pos, k, have_keys, len(path))
+                yield kpos
+
+    def solve_keys(pos, keys, cache=None, debug=False):
+        if cache is None:
+            cache = {}
+        if debug:
+            print("SOLVE", pos, keys, len(cache))
+        if not keys:
+            return 0
+        cache_key = (pos, keys)
+        result = cache.get(cache_key)
+        if result is not None:
+            return result
+        result = 10 ** 10
+        for key in reachable(pos, keys, debug=debug):
+            keys_left = "".join(set(keys) - set([key_by_pos[key]]))
+            if debug:
+                print(
+                    "REACHABLE",
+                    pos,
+                    maze[pos],
+                    key_by_pos[key],
+                    keys_left,
+                    p_to_p[(pos, key)],
+                    len(cache),
+                )
+            d = p_to_p[(pos, key)] + solve_keys(
+                key, keys_left, cache=cache, debug=debug
+            )
+            if debug:
+                print(
+                    "KEY",
+                    pos,
+                    key_by_pos[key],
+                    keys_left,
+                    p_to_p[(pos, key)],
+                    d,
+                    result,
+                    len(cache),
+                )
+            result = min(result, d)
+        if debug:
+            print("CACHE", pos, keys, result)
+        cache[cache_key] = result
+        return result
+
+    return solve_keys(start, need_keys, debug=debug)
 
 
-print(
-    solve(
-        parse(
-            """
+EX0 = parse(
+    """
+########################
+#f.D.E.e.C.b.A.@.a.B.c.#
+######################.#
+#d.....................#
+########################
+""".strip().splitlines()
+)
+
+assert solve(EX0, debug=True) == 86
+
+EX1 = parse(
+    """
 ########################
 #...............b.C.D.f#
 #.######################
 #.....@.a.B.c.d.A.e.F.g#
 ########################
 """.strip().splitlines()
-        )
-    )
 )
+assert solve(EX1) == 132
 
 if __name__ == "__main__":
-    pass
+    maze = parse(Input(18).read().strip().splitlines())
+    print(len(solve(maze, debug=True)))
