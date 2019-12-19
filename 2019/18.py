@@ -115,11 +115,172 @@ one is: a, f, b, j, g, n, h, d, l, o, e, p, c, i, k, m
 Shortest paths are 81 steps; one is: a, c, f, i, d, g, b, e, h
 
 How many steps is the shortest path that collects all of the keys?
+
+--- Part Two ---
+
+You arrive at the vault only to discover that there is not one vault,
+but four - each with its own entrance.
+
+On your map, find the area in the middle that looks like this:
+
+...
+.@.
+...
+
+Update your map to instead use the correct data:
+
+@#@
+###
+@#@
+
+This change will split your map into four separate sections, each with
+its own entrance:
+
+#######       #######
+#a.#Cd#       #a.#Cd#
+##...##       ##@#@##
+##.@.##  -->  #######
+##...##       ##@#@##
+#cB#Ab#       #cB#Ab#
+#######       #######
+
+Because some of the keys are for doors in other vaults, it would take
+much too long to collect all of the keys by yourself. Instead, you
+deploy four remote-controlled robots. Each starts at one of the
+entrances (@).
+
+Your goal is still to collect all of the keys in the fewest steps, but
+now, each robot has its own position and can move independently. You
+can only remotely control a single robot at a time. Collecting a key
+instantly unlocks any corresponding doors, regardless of the vault in
+which the key or door is found.
+
+For example, in the map above, the top-left robot first collects key
+a, unlocking door A in the bottom-right vault:
+
+#######
+#@.#Cd#
+##.#@##
+#######
+##@#@##
+#cB#.b#
+#######
+
+Then, the bottom-right robot collects key b, unlocking door B in the
+bottom-left vault:
+
+#######
+#@.#Cd#
+##.#@##
+#######
+##@#.##
+#c.#.@#
+#######
+
+Then, the bottom-left robot collects key c:
+
+#######
+#@.#.d#
+##.#@##
+#######
+##.#.##
+#@.#.@#
+#######
+
+Finally, the top-right robot collects key d:
+
+#######
+#@.#.@#
+##.#.##
+#######
+##.#.##
+#@.#.@#
+#######
+
+In this example, it only took 8 steps to collect all of the keys.
+
+Sometimes, multiple robots might have keys available, or a robot might
+have to wait for multiple keys to be collected:
+
+###############
+#d.ABC.#.....a#
+######@#@######
+###############
+######@#@######
+#b.....#.....c#
+###############
+
+First, the top-right, bottom-left, and bottom-right robots take turns
+collecting keys a, b, and c, a total of 6 + 6 + 6 = 18 steps. Then,
+the top-left robot can access key d, spending another 6 steps;
+collecting all of the keys here takes a minimum of 24 steps.
+
+Here's a more complex example:
+
+#############
+#DcBa.#.GhKl#
+#.###@#@#I###
+#e#d#####j#k#
+###C#@#@###J#
+#fEbA.#.FgHi#
+#############
+
+Top-left robot collects key a.
+Bottom-left robot collects key b.
+Top-left robot collects key c.
+Bottom-left robot collects key d.
+Top-left robot collects key e.
+Bottom-left robot collects key f.
+Bottom-right robot collects key g.
+Top-right robot collects key h.
+Bottom-right robot collects key i.
+Top-right robot collects key j.
+Bottom-right robot collects key k.
+Top-right robot collects key l.
+
+In the above example, the fewest steps to collect all of the keys is 32.
+
+Here's an example with more choices:
+
+#############
+#g#f.D#..h#l#
+#F###e#E###.#
+#dCba@#@BcIJ#
+#############
+#nK.L@#@G...#
+#M###N#H###.#
+#o#m..#i#jk.#
+#############
+
+One solution with the fewest steps is:
+
+Top-left robot collects key e.
+Top-right robot collects key h.
+Bottom-right robot collects key i.
+Top-left robot collects key a.
+Top-left robot collects key b.
+Top-right robot collects key c.
+Top-left robot collects key d.
+Top-left robot collects key f.
+Top-left robot collects key g.
+Bottom-right robot collects key k.
+Bottom-right robot collects key j.
+Top-right robot collects key l.
+Bottom-left robot collects key n.
+Bottom-left robot collects key m.
+Bottom-left robot collects key o.
+
+This example requires at least 72 steps to collect all keys.
+
+After updating your map and using the remote-controlled robots, what
+is the fewest steps necessary to collect all of the keys?
 """
 
 import string
 from aoc import *
-from collections import deque
+from collections import deque, namedtuple
+
+State = namedtuple("State", "pos len visited")
 
 
 def parse(lines):
@@ -133,83 +294,43 @@ def parse(lines):
     return maze
 
 
-accessible = set([".", "@"] + list(string.ascii_lowercase))
-
-
-def solve_one(maze, key, start, open_doors):
-    def goal(pos):
-        return 0 if pos == key else 1
-
-    def moves(pos):
-        for n in neighbors4(pos):
-            glyph = maze.get(n)
-            if glyph not in accessible and glyph not in open_doors:
-                continue
-            yield n
-
-    solved = Astar(start, moves, goal)
-    return solved
-
-
-def calc_opened(maze, keys, path):
-    seen = set()
-    result = []
-    for p in path:
-        if p in seen:
-            continue
-        if p in keys and p not in seen:
-            result.append(maze[p].upper())
-            seen.add(p)
-    return result
+def key_bit(k):
+    return 1 << (ord(k) - ord("a"))
 
 
 def solve(maze, debug=False):
     keys = set(p for p, k in maze.items() if k in string.ascii_lowercase)
     doors = set(p for p, k in maze.items() if k in string.ascii_uppercase)
     start = next(p for p, k in maze.items() if k == "@")
-    p_to_p = {}
-    for k in keys | set([start]):
-        for j in keys | set([start]):
-            if k == j:
-                continue
-            p_to_p[(k, j)] = len(solve_one(maze, k, j, string.ascii_uppercase))
+    key_bits = dict(
+        (k, key_bit(k)) for k in maze.values() if k in string.ascii_lowercase
+    )
+    all_bits = sum(key_bits.values())
 
-    # State consists of (start point, remaining keys, full path)
-    todo = [(start, keys, [], [])]
-    best = None
-    blen = 10 ** 9
-    while todo:
-        begin, remain, path, opened = todo.pop()
-        if len(path) > blen:
-            continue
-        if not remain and len(path) < blen:
-            print("BEST", len(path), "".join(opened))
-            best = path
-            blen = len(path)
-            continue
-        for key in sorted(remain, key=lambda p: p_to_p[(begin, p)], reverse=True):
-            key_path = solve_one(maze, key, begin, opened)
-            if key_path is None:
+    seen = set()
+    queue = deque([State(start, 0, 0)])
+    while queue:
+        state = queue.popleft()
+        if state.visited == all_bits:
+            print("DONE", state)
+            return state.len
+        for n in neighbors4(state.pos):
+            glyph = maze.get(n, "#")
+            if glyph == "#":
                 continue
-            if debug > 1:
-                print(
-                    blen,
-                    len(todo),
-                    maze[key],
-                    len(remain),
-                    len(path),
-                    len(key_path),
-                    "".join(opened),
-                )
-            todo.append(
-                (
-                    key_path[-1],
-                    remain - set([key]),
-                    path + key_path[1:],
-                    opened + [maze[key].upper()],
-                )
-            )
-    return best
+            seen_key = (n, state.visited)
+            if seen_key in seen:
+                continue
+            if (
+                glyph in string.ascii_uppercase
+                and (state.visited & key_bit(glyph.lower())) == 0
+            ):
+                continue
+            visited = state.visited
+            if glyph in string.ascii_lowercase:
+                visited |= key_bit(glyph)
+            seen.add(seen_key)
+            queue.append(State(n, state.len + 1, visited))
 
 
 EX0 = parse(
@@ -222,7 +343,7 @@ EX0 = parse(
 """.strip().splitlines()
 )
 
-assert len(solve(EX0)) == 86
+assert solve(EX0, debug=True) == 86
 
 EX1 = parse(
     """
@@ -233,8 +354,8 @@ EX1 = parse(
 ########################
 """.strip().splitlines()
 )
-assert len(solve(EX1)) == 132
+assert solve(EX1) == 132
 
 if __name__ == "__main__":
     maze = parse(Input(18).read().strip().splitlines())
-    print(len(solve(maze, debug=2)))
+    print(solve(maze, debug=True))
