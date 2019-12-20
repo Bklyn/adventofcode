@@ -149,43 +149,58 @@ if __name__ == "__main__":
         return result
 
     def beam_width(x, y, debug=False):
-        lower, upper = x, 10 ** 10
-        while lower < upper:
-            x = (lower + upper) // 2
+        low, high = x, 10 ** 10
+        while low < high:
+            x = (low + high) // 2
             result = in_beam(x, y)
-            if debug:
-                print("WIDTH", y, lower, upper, x, result)
-            if result and lower != x:
-                lower = x
+            if debug > 1:
+                print("WIDTH", y, low, high, x, result)
+            if result and low != x:
+                low = x
             else:
-                upper = x - 1
-        return lower
+                high = x - 1
+        return low
 
-    def lower_bound(y, expect=1, lower=0, upper=10**10, debug=False):
-        count = upper - lower
+    def lower_bound(y, first=0, last=10 ** 10, comp=identity, debug=False):
+        count = last - first
         while count > 0:
             step = count // 2
-            mid = lower + step
-            if in_beam(mid, y) == expect:
-                lower += 1
+            mid = first + step
+            value = in_beam(mid, y)
+            if debug:
+                print("LB", first, last, mid, value, comp(value))
+            if comp(value):
+                first = mid + 1
                 count -= step + 1
             else:
                 count = step
-        return lower
-
-    def find_beam(y, debug=False):
-        lower = 0, upper = 10 ** 10
+        return first
 
     x, y = 4, 3
-    slen = 10 - 1
+    slen = 100 - 1
+    lines = {}
 
     while True:
         while not in_beam(x, y):
             x += 1
-        if not in_beam(x + 10, y):
+        if not in_beam(x + slen, y):
             y += 1
             continue
-        width = beam_width(x, y, debug=True)
+        lb = x
+        ub = lower_bound(y, first=x)
+        if ub - lb < slen:
+            continue
+        # print(
+        #     "LINE",
+        #     (x, y),
+        #     lb,
+        #     ub,
+        #     # " " * lb
+        #     # + "".join(
+        #     #    ("#" if in_beam(x, y) else ".") for x in range(max(0, lb - 1), ub + 1)
+        #     # ),
+        # )
+        width = ub - lb + 1  # beam_width(x, y, debug=True)
         for dx in range(x, width):
             if (
                 in_beam(dx, y - slen)
@@ -206,6 +221,7 @@ if __name__ == "__main__":
         y,
         [
             in_beam(x, y)
-            for x, y in [(x, y), (x + slen, y), (x, y + slen), (x + slen, y + slen),]
+            for x, y in [(x, y), (x + slen, y), (x, y + slen), (x + slen, y + slen)]
         ],
     )
+    print(10000 * x + y)
