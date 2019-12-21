@@ -249,8 +249,12 @@ both at the outermost layer?
 """
 
 from aoc import *
+import sys
 import string
 from collections import defaultdict
+
+
+sys.setrecursionlimit(10 ** 6)
 
 
 def open_square(maze, pos):
@@ -282,7 +286,7 @@ def parse(lines, debug=False):
                 doors[door].append(coord)
             elif x in half_doors:
                 door = half_doors.pop(x) + c
-                coord, dtype = (x, y), "VDOOR"
+                coord, dtype = (x, y), "vDOOR"
                 if maze.get((x, y - 2)) == ".":
                     coord, dtype = (x, y - 1), "^DOOR"
                 if debug:
@@ -292,48 +296,92 @@ def parse(lines, debug=False):
             else:
                 half_doors[x] = c
     assert not half_doors, half_doors
-    warps = {}
-    for door, coords in doors.items():
-        if len(coords) == 1:
-            continue
-        warps[coords[0]] = open_square(maze, coords[1])
-        warps[coords[1]] = open_square(maze, coords[0])
-
-    assert all(warp is not None for warp in warps.values())
-    return maze, warps
+    return maze
 
 
 def render(maze, path):
     ul, lr = origin, (max(X(k) for k in maze), max(Y(k) for k in maze))
+
+    def glyph(pos):
+        for p, level in path:
+            if pos == p:
+                return str(level)[0]
+        return maze.get(pos, " ")[0]
+
     print("MAZE", lr, len(path))
     for y in range(0, Y(lr) + 1):
-        print(
-            "".join(
-                ("*" if (x, y) in path else maze.get((x, y), " ")[0])
-                for x in range(0, X(lr) + 1)
-            ),
+        print("".join(glyph((x, y)) for x in range(0, X(lr) + 1)))
+
+
+def get_warps(maze, level=-1, debug=False):
+    squares = [k for k, v in maze.items() if v in ".#"]
+    assert squares
+    xdims = (min(x for x, y in squares), max(x for x, y in squares))
+    ydims = (min(y for x, y in squares), max(y for x, y in squares))
+    doors = [(p, v) for p, v in maze.items() if v not in ".#"]
+    pairs = defaultdict(list)
+    for pos, door in doors:
+        pairs[door].append(pos)
+
+    def is_inside(p):
+        return (
+            X(p) > xdims[0] and X(p) < xdims[1] and Y(p) > ydims[0] and Y(p) < ydims[1]
         )
 
+    warps = {}
+    if level < 0:
+        for door, positions in pairs.items():
+            if len(positions) == 1:
+                continue
+            warps[positions[0]] = (open_square(maze, positions[1]), 0)
+            warps[positions[1]] = (open_square(maze, positions[0]), 0)
+        return warps
 
-def solve(maze, warps):
+    for door, positions in pairs.items():
+        if len(positions) == 1:
+            continue
+        p1, p2 = positions
+        if not is_inside(p1):
+            p1, p2 = p2, p1
+        # p1 is the inside door
+        warps[p1] = (open_square(maze, p2), 1)
+        if debug:
+            print("WARP-INSIDE", p1, warps[p1])
+        # Outside door not a warp at topmost level
+        if level > 0:
+            warps[p2] = (open_square(maze, p1), -1)
+            if debug:
+                print("WARP-OUTSIDE", p2, warps[p2])
+
+    if level == 0:
+        assert all(is_inside(pos) for pos in warps.keys())
+
+    return warps
+
+
+def solve(maze, level=-1, debug=False):
     start = open_square(maze, next(p for p, d in maze.items() if d == "AA"))
     goal = open_square(maze, next(p for p, d in maze.items() if d == "ZZ"))
-    print("SOLVE", start, goal)
+    if debug:
+        print("SOLVE", start, goal, level)
+    level_warps = [get_warps(maze, level, debug), get_warps(maze, level + 1, debug)]
 
-    def moves(pos, debug=True):
+    def moves(state):
+        pos, level = state
+        warps = level_warps[0 if level <= 0 else 1]
         for n in neighbors4(pos):
             if n in warps:
                 if debug:
                     print("WARP", pos, maze[n], warps[n])
-                yield warps[n]
-            if maze.get(n, "#") != "#":
-                if debug:
-                    print("BFS", pos, n, maze[n])
-                yield n
+                yield (warps[n][0], level + warps[n][1])
+            if maze.get(n, "#") == ".":
+                yield (n, level)
 
-    best = bfs(start, moves, (goal,))
-    print("BEST", len(best), [pos for pos in best if pos in warps])
-    render(maze, best)
+    best = bfs((start, 0), moves, ((goal, 0),))
+    if debug:
+        assert best is not None
+        print("BEST", len(best))
+        render(maze, best)
     return len(best) - 1 if best is not None else 10 ** 10
 
 
@@ -358,8 +406,7 @@ FG..#########.....#
              Z
              Z
 """
-ex1 = solve(*parse(EX1.splitlines()))
-assert ex1 == 23, ex1
+assert solve(parse(EX1.splitlines())) == 23
 
 EX2 = """
                    A
@@ -400,11 +447,52 @@ YN......#               VT..#....QG
            B   J   C
            U   P   P
 """
-# assert solve(*parse(EX2.splitlines())) == 58
+assert solve(parse(EX2.splitlines())) == 58
+
+EX3 = """
+             Z L X W       C
+             Z P Q B       K
+  ###########.#.#.#.#######.###############
+  #...#.......#.#.......#.#.......#.#.#...#
+  ###.#.#.#.#.#.#.#.###.#.#.#######.#.#.###
+  #.#...#.#.#...#.#.#...#...#...#.#.......#
+  #.###.#######.###.###.#.###.###.#.#######
+  #...#.......#.#...#...#.............#...#
+  #.#########.#######.#.#######.#######.###
+  #...#.#    F       R I       Z    #.#.#.#
+  #.###.#    D       E C       H    #.#.#.#
+  #.#...#                           #...#.#
+  #.###.#                           #.###.#
+  #.#....OA                       WB..#.#..ZH
+  #.###.#                           #.#.#.#
+CJ......#                           #.....#
+  #######                           #######
+  #.#....CK                         #......IC
+  #.###.#                           #.###.#
+  #.....#                           #...#.#
+  ###.###                           #.#.#.#
+XF....#.#                         RF..#.#.#
+  #####.#                           #######
+  #......CJ                       NM..#...#
+  ###.#.#                           #.###.#
+RE....#.#                           #......RF
+  ###.###        X   X       L      #.#.#.#
+  #.....#        F   Q       P      #.#.#.#
+  ###.###########.###.#######.#########.###
+  #.....#...#.....#.......#...#.....#.#...#
+  #####.#.###.#######.#######.###.###.#.#.#
+  #.......#.......#.#.#.#.#...#...#...#.#.#
+  #####.###.#####.#.#.#.#.###.###.#.###.###
+  #.......#.....#.#...#...............#...#
+  #############.#.#.###.###################
+               A O F   N
+               A A D   M
+"""
+assert solve(parse(EX3.splitlines()), level=0, debug=True) == 396
+
 
 if __name__ == "__main__":
-    maze, warps = parse(Input(20).read().splitlines())
-    render(maze, [])
+    maze = parse(Input(20).read().splitlines())
     print(door for k, door in maze.items() if door not in ".#")
-    print(warps)
-    print(solve(maze, warps))
+    print(solve(maze))
+    print(solve(maze, level=0))
