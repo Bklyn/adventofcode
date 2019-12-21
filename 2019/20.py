@@ -100,16 +100,168 @@ steps.
 
 In your maze, how many steps does it take to get from the open tile
 marked AA to the open tile marked ZZ?
+
+--- Part Two ---
+
+Strangely, the exit isn't open when you reach it. Then, you remember:
+the ancient Plutonians were famous for building recursive spaces.
+
+The marked connections in the maze aren't portals: they physically
+connect to a larger or smaller copy of the maze. Specifically, the
+labeled tiles around the inside edge actually connect to a smaller
+copy of the same maze, and the smaller copy's inner labeled tiles
+connect to yet a smaller copy, and so on.
+
+When you enter the maze, you are at the outermost level; when at the
+outermost level, only the outer labels AA and ZZ function (as the
+start and end, respectively); all other outer labeled tiles are
+effectively walls. At any other level, AA and ZZ count as walls, but
+the other outer labeled tiles bring you one level outward.
+
+Your goal is to find a path through the maze that brings you back to
+ZZ at the outermost level of the maze.
+
+In the first example above, the shortest path is now the loop around
+the right side. If the starting level is 0, then taking the
+previously-shortest path would pass through BC (to level 1), DE (to
+level 2), and FG (back to level 1). Because this is not the outermost
+level, ZZ is a wall, and the only option is to go back around to BC,
+which would only send you even deeper into the recursive maze.
+
+In the second example above, there is no path that brings you to ZZ at
+the outermost level.
+
+Here is a more interesting example:
+
+             Z L X W       C
+             Z P Q B       K
+  ###########.#.#.#.#######.###############
+  #...#.......#.#.......#.#.......#.#.#...#
+  ###.#.#.#.#.#.#.#.###.#.#.#######.#.#.###
+  #.#...#.#.#...#.#.#...#...#...#.#.......#
+  #.###.#######.###.###.#.###.###.#.#######
+  #...#.......#.#...#...#.............#...#
+  #.#########.#######.#.#######.#######.###
+  #...#.#    F       R I       Z    #.#.#.#
+  #.###.#    D       E C       H    #.#.#.#
+  #.#...#                           #...#.#
+  #.###.#                           #.###.#
+  #.#....OA                       WB..#.#..ZH
+  #.###.#                           #.#.#.#
+CJ......#                           #.....#
+  #######                           #######
+  #.#....CK                         #......IC
+  #.###.#                           #.###.#
+  #.....#                           #...#.#
+  ###.###                           #.#.#.#
+XF....#.#                         RF..#.#.#
+  #####.#                           #######
+  #......CJ                       NM..#...#
+  ###.#.#                           #.###.#
+RE....#.#                           #......RF
+  ###.###        X   X       L      #.#.#.#
+  #.....#        F   Q       P      #.#.#.#
+  ###.###########.###.#######.#########.###
+  #.....#...#.....#.......#...#.....#.#...#
+  #####.#.###.#######.#######.###.###.#.#.#
+  #.......#.......#.#.#.#.#...#...#...#.#.#
+  #####.###.#####.#.#.#.#.###.###.#.###.###
+  #.......#.....#.#...#...............#...#
+  #############.#.#.###.###################
+               A O F   N
+               A A D   M
+
+One shortest path through the maze is the following:
+
+Walk from AA to XF (16 steps)
+Recurse into level 1 through XF (1 step)
+Walk from XF to CK (10 steps)
+Recurse into level 2 through CK (1 step)
+Walk from CK to ZH (14 steps)
+Recurse into level 3 through ZH (1 step)
+Walk from ZH to WB (10 steps)
+Recurse into level 4 through WB (1 step)
+Walk from WB to IC (10 steps)
+Recurse into level 5 through IC (1 step)
+Walk from IC to RF (10 steps)
+Recurse into level 6 through RF (1 step)
+Walk from RF to NM (8 steps)
+Recurse into level 7 through NM (1 step)
+Walk from NM to LP (12 steps)
+Recurse into level 8 through LP (1 step)
+Walk from LP to FD (24 steps)
+Recurse into level 9 through FD (1 step)
+Walk from FD to XQ (8 steps)
+Recurse into level 10 through XQ (1 step)
+Walk from XQ to WB (4 steps)
+Return to level 9 through WB (1 step)
+Walk from WB to ZH (10 steps)
+Return to level 8 through ZH (1 step)
+Walk from ZH to CK (14 steps)
+Return to level 7 through CK (1 step)
+Walk from CK to XF (10 steps)
+Return to level 6 through XF (1 step)
+Walk from XF to OA (14 steps)
+Return to level 5 through OA (1 step)
+Walk from OA to CJ (8 steps)
+Return to level 4 through CJ (1 step)
+Walk from CJ to RE (8 steps)
+Return to level 3 through RE (1 step)
+Walk from RE to IC (4 steps)
+Recurse into level 4 through IC (1 step)
+Walk from IC to RF (10 steps)
+Recurse into level 5 through RF (1 step)
+Walk from RF to NM (8 steps)
+Recurse into level 6 through NM (1 step)
+Walk from NM to LP (12 steps)
+Recurse into level 7 through LP (1 step)
+Walk from LP to FD (24 steps)
+Recurse into level 8 through FD (1 step)
+Walk from FD to XQ (8 steps)
+Recurse into level 9 through XQ (1 step)
+Walk from XQ to WB (4 steps)
+Return to level 8 through WB (1 step)
+Walk from WB to ZH (10 steps)
+Return to level 7 through ZH (1 step)
+Walk from ZH to CK (14 steps)
+Return to level 6 through CK (1 step)
+Walk from CK to XF (10 steps)
+Return to level 5 through XF (1 step)
+Walk from XF to OA (14 steps)
+Return to level 4 through OA (1 step)
+Walk from OA to CJ (8 steps)
+Return to level 3 through CJ (1 step)
+Walk from CJ to RE (8 steps)
+Return to level 2 through RE (1 step)
+Walk from RE to XQ (14 steps)
+Return to level 1 through XQ (1 step)
+Walk from XQ to FD (8 steps)
+Return to level 0 through FD (1 step)
+Walk from FD to ZZ (18 steps)
+
+This path takes a total of 396 steps to move from AA at the outermost
+layer to ZZ at the outermost layer.
+
+In your maze, when accounting for recursion, how many steps does it
+take to get from the open tile marked AA to the open tile marked ZZ,
+both at the outermost layer?
+
 """
 
 from aoc import *
 import string
+from collections import defaultdict
 
-letters = string.ascii_uppercase
+
+def open_square(maze, pos):
+    for p in neighbors4(pos):
+        if maze.get(p) == ".":
+            return p
 
 
-def parse(lines):
+def parse(lines, debug=False):
     maze = {}
+    doors = defaultdict(list)
     half_doors = {}
     for y, line in enumerate(l for l in lines if l.strip()):
         for x, c in enumerate(line):
@@ -118,19 +270,71 @@ def parse(lines):
                 continue
             if not c.strip():
                 continue
-            assert c in letters
+            assert c in string.ascii_uppercase
             if x - 1 in half_doors:
                 door = half_doors.pop(x - 1) + c
-                maze[(x, y)] = door
+                coord, dtype = (x, y), "DOOR>"
+                if maze.get((x - 2, y)) == ".":
+                    coord, dtype = (x - 1, y), "<DOOR"
+                if debug:
+                    print(dtype, coord, door)
+                maze[coord] = door
+                doors[door].append(coord)
             elif x in half_doors:
                 door = half_doors.pop(x) + c
-                maze[(x, y - 1)] = door
+                coord, dtype = (x, y), "VDOOR"
+                if maze.get((x, y - 2)) == ".":
+                    coord, dtype = (x, y - 1), "^DOOR"
+                if debug:
+                    print(dtype, coord, door)
+                maze[coord] = door
+                doors[door].append(coord)
             else:
                 half_doors[x] = c
-    doors = sorted((v, k) for k, v in maze.items() if v not in "#.")
-    print(doors)
     assert not half_doors, half_doors
-    return maze
+    warps = {}
+    for door, coords in doors.items():
+        if len(coords) == 1:
+            continue
+        warps[coords[0]] = open_square(maze, coords[1])
+        warps[coords[1]] = open_square(maze, coords[0])
+
+    assert all(warp is not None for warp in warps.values())
+    return maze, warps
+
+
+def render(maze, path):
+    ul, lr = origin, (max(X(k) for k in maze), max(Y(k) for k in maze))
+    print("MAZE", lr, len(path))
+    for y in range(0, Y(lr) + 1):
+        print(
+            "".join(
+                ("*" if (x, y) in path else maze.get((x, y), " ")[0])
+                for x in range(0, X(lr) + 1)
+            ),
+        )
+
+
+def solve(maze, warps):
+    start = open_square(maze, next(p for p, d in maze.items() if d == "AA"))
+    goal = open_square(maze, next(p for p, d in maze.items() if d == "ZZ"))
+    print("SOLVE", start, goal)
+
+    def moves(pos, debug=True):
+        for n in neighbors4(pos):
+            if n in warps:
+                if debug:
+                    print("WARP", pos, maze[n], warps[n])
+                yield warps[n]
+            if maze.get(n, "#") != "#":
+                if debug:
+                    print("BFS", pos, n, maze[n])
+                yield n
+
+    best = bfs(start, moves, (goal,))
+    print("BEST", len(best), [pos for pos in best if pos in warps])
+    render(maze, best)
+    return len(best) - 1 if best is not None else 10 ** 10
 
 
 EX1 = """
@@ -154,7 +358,8 @@ FG..#########.....#
              Z
              Z
 """
-parse(EX1.splitlines())
+ex1 = solve(*parse(EX1.splitlines()))
+assert ex1 == 23, ex1
 
 EX2 = """
                    A
@@ -195,4 +400,11 @@ YN......#               VT..#....QG
            B   J   C
            U   P   P
 """
-parse(EX2)
+# assert solve(*parse(EX2.splitlines())) == 58
+
+if __name__ == "__main__":
+    maze, warps = parse(Input(20).read().splitlines())
+    render(maze, [])
+    print(door for k, door in maze.items() if door not in ".#")
+    print(warps)
+    print(solve(maze, warps))
