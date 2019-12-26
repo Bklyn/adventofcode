@@ -296,6 +296,56 @@ def parse(input):
     return bits
 
 
+def adjacent_p2(x, y, z):
+    # we don't talk about the center square
+    if (x, y) == (2, 2):
+        return []
+
+    adjacent = []
+
+    # look left
+    if x == 0:
+        # looking out
+        adjacent.append((1, 2, z - 1))
+    elif (x, y) == (3, 2):
+        # looking in
+        adjacent.extend((4, yy, z + 1) for yy in range(5))
+    else:
+        adjacent.append((x - 1, y, z))
+
+    # look right
+    if x == 4:
+        # looking out
+        adjacent.append((3, 2, z - 1))
+    elif (x, y) == (1, 2):
+        # looking in
+        adjacent.extend((0, yy, z + 1) for yy in range(5))
+    else:
+        adjacent.append((x + 1, y, z))
+
+    # look up
+    if y == 0:
+        # looking out
+        adjacent.append((2, 1, z - 1))
+    elif (x, y) == (2, 3):
+        # looking in
+        adjacent.extend((xx, 4, z + 1) for xx in range(5))
+    else:
+        adjacent.append((x, y - 1, z))
+
+    # look down
+    if y == 4:
+        # looking out
+        adjacent.append((2, 3, z - 1))
+    elif (x, y) == (2, 1):
+        # looking in
+        adjacent.extend((xx, 0, z + 1) for xx in range(5))
+    else:
+        adjacent.append((x, y + 1, z))
+
+    return adjacent
+
+
 def make_neighbors():
     nb = defaultdict(set)
     for idx in range(25):
@@ -320,7 +370,10 @@ def make_neighbors():
             nb[idx].add((17, -1))
             nb[17].add((idx, 1))
     for idx in sorted(nb):
-        print("NB", idx, sorted(nb[idx]))
+        x, y = idx % 5, idx // 5
+        n2 = sorted((x + 5 * y, z) for x, y, z in adjacent_p2(x, y, 0))
+        # print("NB", idx, (x, y), sorted(nb[idx]), n2)
+        assert sorted(nb[idx]) == n2, (nb[idx], n2)
     return nb
 
 
@@ -349,7 +402,12 @@ def evolve(bits, level=0, nfunc=neighbors):
 
 
 def count_bits(bits):
-    return sum(c == "1" for c in format(bits, "b"))
+    result = 0
+    while bits:
+        if bits & 1:
+            result += 1
+        bits >>= 1
+    return result
 
 
 def evolve_recursive(bits, rounds=200, debug=False):
@@ -359,10 +417,14 @@ def evolve_recursive(bits, rounds=200, debug=False):
         result = defaultdict(int)
         levels = list(world.keys())
         levels += [min(levels) - 1, max(levels) + 1]
-        for level in sorted(levels):
+        for level in levels:
             bits = world[level]
             for idx in range(25):
-                n = sum((world[level + dl] & (1 << x)) != 0 for x, dl in NEIGH[idx])
+                n = 0
+                for x, dl in NEIGH[idx]:
+                    result[level + dl] |= 0  # Implicitly create new level
+                    if world[level + dl] & (1 << x) != 0:
+                        n += 1
                 mask = 1 << idx
                 if bits & mask:
                     if n == 1:
@@ -370,10 +432,7 @@ def evolve_recursive(bits, rounds=200, debug=False):
                 elif n in (1, 2):
                     result[level] |= mask
             if debug and r == rounds - 1 and result[level]:
-                render(
-                    result[level],
-                    "LEVEL:{}:{}:{}".format(level, r + 1, count_bits(result[level])),
-                )
+                render(result[level], "LEVEL:{}:{}".format(level, r + 1))
         world = result
     count = sum(count_bits(bits) for bits in world.values())
     return count
