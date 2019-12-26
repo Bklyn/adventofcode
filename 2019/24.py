@@ -296,56 +296,6 @@ def parse(input):
     return bits
 
 
-def adjacent_p2(x, y, z):
-    # we don't talk about the center square
-    if (x, y) == (2, 2):
-        return []
-
-    adjacent = []
-
-    # look left
-    if x == 0:
-        # looking out
-        adjacent.append((1, 2, z - 1))
-    elif (x, y) == (3, 2):
-        # looking in
-        adjacent.extend((4, yy, z + 1) for yy in range(5))
-    else:
-        adjacent.append((x - 1, y, z))
-
-    # look right
-    if x == 4:
-        # looking out
-        adjacent.append((3, 2, z - 1))
-    elif (x, y) == (1, 2):
-        # looking in
-        adjacent.extend((0, yy, z + 1) for yy in range(5))
-    else:
-        adjacent.append((x + 1, y, z))
-
-    # look up
-    if y == 0:
-        # looking out
-        adjacent.append((2, 1, z - 1))
-    elif (x, y) == (2, 3):
-        # looking in
-        adjacent.extend((xx, 4, z + 1) for xx in range(5))
-    else:
-        adjacent.append((x, y - 1, z))
-
-    # look down
-    if y == 4:
-        # looking out
-        adjacent.append((2, 3, z - 1))
-    elif (x, y) == (2, 1):
-        # looking in
-        adjacent.extend((xx, 0, z + 1) for xx in range(5))
-    else:
-        adjacent.append((x, y + 1, z))
-
-    return adjacent
-
-
 def make_neighbors():
     nb = defaultdict(set)
     for idx in range(25):
@@ -370,28 +320,27 @@ def make_neighbors():
             nb[idx].add((17, -1))
             nb[17].add((idx, 1))
     for idx in sorted(nb):
-        x, y = idx % 5, idx // 5
-        n2 = sorted((x + 5 * y, z) for x, y, z in adjacent_p2(x, y, 0))
+        # x, y = idx % 5, idx // 5
         # print("NB", idx, (x, y), sorted(nb[idx]), n2)
-        assert sorted(nb[idx]) == n2, (nb[idx], n2)
+        pass
     return nb
 
 
 NEIGH = make_neighbors()
 
 
-def neighbors(idx, level):
+def neighbors(idx):
     x, y = idx % 5, idx // 5
     for x, y in ((x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)):
         if x >= 0 and x < 5 and y >= 0 and y < 5:
             yield 5 * y + x
 
 
-def evolve(bits, level=0, nfunc=neighbors):
+def evolve(bits):
     result = 0
     for idx in range(25):
         mask = 1 << idx
-        n = sum((bits & (1 << x)) != 0 for x in nfunc(idx, level))
+        n = sum((bits & (1 << x)) != 0 for x in neighbors(idx))
         if bits & mask:
             if n == 1:
                 result |= mask
@@ -417,23 +366,22 @@ def evolve_recursive(bits, rounds=200, debug=False):
         result = defaultdict(int)
         levels = list(world.keys())
         levels += [min(levels) - 1, max(levels) + 1]
-        for level in levels:
+        for level in sorted(levels):
             bits = world[level]
             for idx in range(25):
-                n = 0
-                for x, dl in NEIGH[idx]:
-                    result[level + dl] |= 0  # Implicitly create new level
-                    if world[level + dl] & (1 << x) != 0:
-                        n += 1
+                n = sum(world[level + dl] & (1 << x) != 0 for x, dl in NEIGH[idx])
                 mask = 1 << idx
+                out = 0
                 if bits & mask:
                     if n == 1:
-                        result[level] |= mask
+                        out = mask
                 elif n in (1, 2):
-                    result[level] |= mask
+                    out = mask
+                result[level] |= out
             if debug and r == rounds - 1 and result[level]:
                 render(result[level], "LEVEL:{}:{}".format(level, r + 1))
         world = result
+    return world
     count = sum(count_bits(bits) for bits in world.values())
     return count
 
@@ -496,8 +444,8 @@ EX2 = """
 #....
 """
 
-R2 = evolve_recursive(parse(EX2.strip().splitlines()), 10, debug=True)
-assert R2 == 99, R2
+R2 = evolve_recursive(parse(EX2.strip().splitlines()), 10)
+assert sum(count_bits(b) for b in R2.values()) == 99, R2
 
 state = EXAMPLE[0]
 for expect in EXAMPLE[1:]:
@@ -510,12 +458,12 @@ for expect in EXAMPLE[1:]:
 
 if __name__ == "__main__":
     bits = parse(open("24.txt").read().splitlines())
-    assert count_bits(bits) == 16
     seen = set()
     while bits not in seen:
         seen.add(bits)
         bits = evolve(bits)
-    print("Part 1", bits)
+    print(bits)
     # Solve the recursive problem
     bits = parse(open("24.txt").read().splitlines())
-    print("Part 2", evolve_recursive(bits, rounds=200, debug=True))
+    world = evolve_recursive(bits, rounds=200)
+    print(sum(count_bits(b) for b in world.values()))
