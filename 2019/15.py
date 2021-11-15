@@ -154,6 +154,7 @@ minutes will it take to fill with oxygen?
 
 import collections
 import itertools
+import random
 from aoc import *
 from intcode import Intcode
 
@@ -174,8 +175,14 @@ class Droid(Intcode):
 
     def display(self, result=None):
         print(
-            "DROID: pos={} len={} ox={} best={}".format(
-                self.pos_, len(self.path_), self.ox_, self.best_
+            "DROID: pos={} len={} ox={} best={} ip={} count={} out={}".format(
+                self.pos_,
+                len(self.path_),
+                self.ox_,
+                self.best_,
+                self.ip,
+                self.count,
+                len(self.output),
             )
         )
         keys = self.maze_.keys()
@@ -202,7 +209,7 @@ class Droid(Intcode):
                 # Have yet to visit this
                 self.path_.append((direction, neighbor))
                 return direction
-        # Backtrack
+        # Visited all neghbors; backtrack
         assert len(self.path_)
         direction, pos = self.path_.pop()
         if not len(self.path_):  # Done
@@ -214,10 +221,12 @@ class Droid(Intcode):
         direction, pos = self.path_[-1]
         assert self.maze_.get(pos, None) in (None, result)
         self.maze_[pos] = result
-        if result != 0:
-            self.pos_ = pos
-        else:
+        if result == 0:
+            # Hit a wall; we know the contents at pod, but did not
+            # move there
             self.path_.pop()
+            return
+        self.pos_ = pos
         if result == 2:
             self.ox_ = pos
             self.best_ = min(self.best_, len(self.path_))
