@@ -200,9 +200,11 @@ After visiting every part of the scaffold at least once, how much dust
 does the vacuum robot report it has collected?
 """
 
+import itertools
 from aoc import *
 from intcode import Intcode
 
+# For my own sanity, swap the UP and DOWN tuples
 UP, DOWN, LEFT, RIGHT = (0, -1), (0, 1), (-1, 0), (1, 0)
 
 TURNS = {
@@ -215,11 +217,6 @@ TURNS = {
 ROBOT = {"^": UP, "v": DOWN, "<": LEFT, ">": RIGHT}
 
 
-def calc_turn(h, h2):
-    d = (X(h2) - X(h), Y(h2) - Y(h))
-    return d
-
-
 def move(p, heading):
     return (X(p) + X(heading), Y(p) + Y(heading))
 
@@ -229,7 +226,7 @@ def pipe_neighbors(p, heading):
 
 
 def render(code):
-    return ",".join(str(x) for x in code)
+    return ",".join(",".join(str(i) for i in tpl) for tpl in code)
 
 
 def legal(code):
@@ -253,18 +250,22 @@ def compress(code):
     import string
 
     routines = []
-    while not all(c in ("A", "B", "C") for c in code):
-        idx = next(idx for idx, c in enumerate(code) if c in ("L", "R"))
-        for flen in range(4, 12, 2):
-            if (
-                code[idx + flen] not in ("L", "R")
-                or code[idx + flen : idx + flen + 2] == code[idx : idx + 2]
-            ):
-                break
-        func = code[idx : idx + flen]
-        assert all(c in ("L", "R") or type(c) is int for c in code[idx : idx + flen])
-        code = replace(code, func, string.ascii_uppercase[len(routines)])
+    while any(c[0] in ("L", "R") for c in code):
+        idx = next(idx for idx, c in enumerate(code) if c[0] in ("L", "R"))
+        # Skip ahead 2 code-points and look for a repeat or an
+        # subroutine call
+        eidx = next(
+            (
+                x
+                for x, c in enumerate(code[idx + 2 :], idx + 2)
+                if c[0] not in ("L", "R") or c == code[idx]
+            ),
+            len(code),
+        )
+        func = code[idx:eidx]
+        code = replace(code, func, (string.ascii_uppercase[len(routines)],))
         routines.append(func)
+    assert len(routines) <= 3
     return (code, routines)
 
 
@@ -309,6 +310,7 @@ class Scaffold(Intcode):
         pos = self.robot_
         heading = ROBOT[self.map_[pos]]
         leg = 0
+        turncode = None
         while True:
             assert pos in self.map_ and self.map_.get(pos) != "."
             if debug:
@@ -327,7 +329,8 @@ class Scaffold(Intcode):
                 pos = fwd
                 continue
             if leg:
-                code.append(leg)
+                assert turncode is not None
+                code.append((turncode, leg))
             pn = pipe_neighbors(pos, heading)
             next_pipe = [
                 p
@@ -338,7 +341,7 @@ class Scaffold(Intcode):
                 break
             turn = LEFT if (next_pipe[0] == pipe_neighbors(pos, heading)[0]) else RIGHT
             heading = TURNS[heading][turn]
-            code.append("L" if turn == LEFT else "R")
+            turncode = "L" if turn == LEFT else "R"
             leg = 0
         return code
 

@@ -310,7 +310,7 @@ def always(value):
     return lambda *args: value
 
 
-def Astar(start, moves_func, h_func, cost_func=always(1)):
+def Astar(start, moves_func, h_func, cost_func=always(1), debug=False):
     "Find a shortest sequence of states from start to a goal state (a state s with h_func(s) == 0)."
     frontier = [
         (h_func(start), start)
@@ -328,6 +328,8 @@ def Astar(start, moves_func, h_func, cost_func=always(1)):
                 heappush(frontier, (g + h_func(s2), s2))
                 path_cost[s2] = g
                 previous[s2] = s
+                if debug:
+                    print(g, s2, len(frontier))
 
 
 def bfs(start, moves_func, goals):
