@@ -2,6 +2,7 @@
 #
 # From https://www.reddit.com/r/adventofcode/comments/ee0rqi/2019_day_22_solutions/fbtugcu
 
+m = 119315717514047
 n = 101741582076661
 pos = 2020
 shuffles = {
@@ -19,5 +20,4 @@ with open("22.txt") as f:
                 a, b = fn(arg, m, a, b)
                 break
 r = (b * pow(1 - a, m - 2, m)) % m
-# print(f"Card at #{pos}: {((pos - r) * pow(a, n*(m-2), m) + r) % m}")
-print(pos, ((pos - r) * pow(a, n * (m - 2), m) + r) % m)
+print(f"Card at #{pos}: {((pos - r) * pow(a, n*(m-2), m) + r) % m}")
