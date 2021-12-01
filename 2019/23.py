@@ -62,12 +62,13 @@ class CPU(Intcode):
             return
         dest, x, y = self.output[-3:]
         # print("OUT", self.addr_, self.output[-3:])
-        if dest == 255:
-            if nat[0] is None:
-                print(y)
-            nat[0] = (x, y)
-        else:
-            self.network_[dest].input.extend([x, y])
+        if dest < len(self.network_):
+            peer = self.network_[dest]
+            peer.input.extend(self.output[-2:])
+            return
+        if nat[0] is None:
+            print(y)
+        nat[0] = (x, y)
 
 
 if __name__ == "__main__":
@@ -77,11 +78,9 @@ if __name__ == "__main__":
     prev_nat = (None, None)
     for addr in range(50):
         network[addr] = CPU(network, nat, addr, tape)
-    while any(not cpu._done for cpu in network):
+    while True:
         waiting = []
-        for addr, cpu in enumerate(network):
-            if cpu._done:
-                continue
+        for cpu in network:
             val = cpu.run()
             if val is None:
                 waiting.append(cpu)
@@ -94,7 +93,6 @@ if __name__ == "__main__":
             x, y = nat[0]
             network[0].input.extend([x, y])
             if y == prev_nat[1]:
-                # print("DONE", nat)
                 break
             prev_nat = nat[0]
     print(prev_nat[1])
