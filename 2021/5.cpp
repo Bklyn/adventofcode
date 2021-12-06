@@ -1,7 +1,7 @@
 #include <cassert>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -23,7 +23,10 @@ std::vector<line_t> parse_input(std::istream& in) {
 }
 
 int covered(const std::vector<line_t>& lines, bool diagonals) {
-    std::map<point_t, size_t> graph;
+    // The bounding box of my input data is 989x989, but 1000x1000 is
+    // a bit neater
+    std::vector<int8_t> graph;
+    graph.resize(1000 * 1000, 0);
     for (auto [p0, p1] : lines) {
         const auto [x0, y0] = p0;
         const auto [x1, y1] = p1;
@@ -31,20 +34,22 @@ int covered(const std::vector<line_t>& lines, bool diagonals) {
         int dy = y0 == y1 ? 0 : y0 < y1 ? 1 : -1;
         if (not diagonals and dx and dy)
             continue;
+        // Note: malformed input would cause us to loop forever; using
+        // vector.at should raise an exception in this case
         while (true) {
-            graph[p0]++;
+            const size_t idx = 1000 * p0.second + p0.first;
+            graph.at(idx)++;
             if (p0 == p1)
                 break;
             p0 = std::pair{p0.first + dx, p0.second + dy};
         }
     }
     return std::count_if(graph.begin(), graph.end(),
-        [](const auto& iter) { return iter.second > 1; });
+        [](const auto& x) { return x > 1; });
 }
 
 int main() {
     std::ifstream in{"5.txt"};
     auto lines = parse_input(in);
-    assert(lines.size() == 500);
     std::cout << covered(lines, false) << "\n" << covered(lines, true) << "\n";
 }
