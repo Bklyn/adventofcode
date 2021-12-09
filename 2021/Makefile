@@ -1,18 +1,21 @@
-CXX = g++ -std=c++20
-CXXFLAGS = -g -O2
+CXX = g++-10
+CXXFLAGS = -g -O2 -std=c++20 -Wall -Wextra
 
 BUILD = build
 
-SRC = $(wildcard *.cpp)
+SRC = $(sort $(wildcard *.cpp))
 EXE = $(SRC:%.cpp=build/%)
 
-all: $(EXE)
+all: $(EXE) | $(BUILD)
 
 clean:
-	$(RM) -fr $(BUILD)
+	$(RM) -fr $(BUILD) core *~
 
-$(BUILD)/% : %.cpp | $(BUILD)
+run: $(EXE)
+	@for x in $(EXE); do echo "[Day $$(basename $$x)]"; $$x; echo; done
+
+$(BUILD)/% : %.cpp aoc.hpp | $(BUILD)
 	$(LINK.cc) -o $@ $<
 
 $(BUILD):
-	@mkdir -p $(BUILD)
+	mkdir -p $(BUILD)
