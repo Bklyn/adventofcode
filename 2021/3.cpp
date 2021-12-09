@@ -37,7 +37,7 @@ std::pair<size_t, size_t> day3(std::istream& in) {
     }
     std::bitset<N> gamma;
     for (size_t i = 0; i < N; ++i) {
-        const auto ones = std::count_if(bitvec.begin(), bitvec.end(),
+        const size_t ones = std::count_if(bitvec.begin(), bitvec.end(),
             [i](const auto& bits) { return bits.test(i); });
         gamma[i] = (ones >= bitvec.size() / 2);
     }
