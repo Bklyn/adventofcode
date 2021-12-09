@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <fstream>
@@ -32,7 +33,7 @@ int covered(const std::vector<line_t>& lines, bool diagonals) {
         const auto [x1, y1] = p1;
         int dx = x0 == x1 ? 0 : x0 < x1 ? 1 : -1;
         int dy = y0 == y1 ? 0 : y0 < y1 ? 1 : -1;
-        if (not diagonals and dx and dy)
+        if (!diagonals && dx && dy)
             continue;
         // Note: malformed input would cause us to loop forever; using
         // vector.at should raise an exception in this case
@@ -44,8 +45,8 @@ int covered(const std::vector<line_t>& lines, bool diagonals) {
             p0 = std::pair{p0.first + dx, p0.second + dy};
         }
     }
-    return std::count_if(graph.begin(), graph.end(),
-        [](const auto& x) { return x > 1; });
+    return std::count_if(
+        graph.begin(), graph.end(), [](const auto& x) { return x > 1; });
 }
 
 int main() {
