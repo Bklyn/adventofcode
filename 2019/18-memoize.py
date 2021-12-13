@@ -157,7 +157,7 @@ def solve(maze, debug=False):
     start = next(p for p, k in maze.items() if k == "@")
     pos_by_key = dict((k, p) for p, k in maze.items() if k in string.ascii_lowercase)
     key_by_pos = dict((p, k) for p, k in maze.items() if k in string.ascii_lowercase)
-    need_keys = "".join(pos_by_key.keys())
+    need_keys = "".join(sorted(pos_by_key.keys()))
 
     p_to_p = {}
     for k in keys | set([start]):
@@ -172,25 +172,25 @@ def solve(maze, debug=False):
             kpos = pos_by_key[k]
             path = solve_one(maze, kpos, pos, have_keys)
             if path:
-                if debug:
-                    print("REACH", pos, k, have_keys, len(path))
                 yield kpos
 
-    def solve_keys(pos, keys, cache=None, debug=False):
+    def solve_keys(pos, keys, cache=None, debug=False, depth=0):
         if cache is None:
             cache = {}
-        if debug:
-            print("SOLVE", pos, keys, len(cache))
+        if debug > 3:
+            print("SOLVE", depth, pos, keys, len(cache))
         if not keys:
             return 0
         cache_key = (pos, keys)
         result = cache.get(cache_key)
         if result is not None:
+            if debug:
+                print("HIT", pos, keys, result)
             return result
         result = 10 ** 10
         for key in reachable(pos, keys, debug=debug):
-            keys_left = "".join(set(keys) - set([key_by_pos[key]]))
-            if debug:
+            keys_left = "".join(sorted(set(keys) - set([key_by_pos[key]])))
+            if debug > 2:
                 print(
                     "REACHABLE",
                     pos,
@@ -201,9 +201,9 @@ def solve(maze, debug=False):
                     len(cache),
                 )
             d = p_to_p[(pos, key)] + solve_keys(
-                key, keys_left, cache=cache, debug=debug
+                key, keys_left, cache=cache, debug=debug, depth=depth + 1
             )
-            if debug:
+            if debug > 1:
                 print(
                     "KEY",
                     pos,
@@ -215,8 +215,8 @@ def solve(maze, debug=False):
                     len(cache),
                 )
             result = min(result, d)
-        if debug:
-            print("CACHE", pos, keys, result)
+        if debug or depth == 0:
+            print("CACHE", depth, pos, keys, result, len(cache))
         cache[cache_key] = result
         return result
 
