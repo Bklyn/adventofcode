@@ -19,3 +19,8 @@ $(BUILD)/% : %.cpp aoc.hpp | $(BUILD)
 
 $(BUILD):
 	mkdir -p $(BUILD)
+
+$(BUILD)/24 : monad.hpp
+
+monad.hpp: 24.py 24.txt
+	python3 24.py > monad.hpp
