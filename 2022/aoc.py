@@ -25,7 +25,12 @@ from itertools import (
 from heapq import heappop, heappush
 
 from aocd import get_data
-from aocd.models import Puzzle
+from aocd.models import Puzzle as AOCDPuzzle
+
+
+def Puzzle(day, year=2022):
+    return AOCDPuzzle(year=year, day=day)
+
 
 identity = lambda x: x
 letters = "abcdefghijklmnopqrstuvwxyz"
