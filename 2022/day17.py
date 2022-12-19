@@ -2,7 +2,7 @@
  
 from aoc import *
 
-def tetris(input, rocks=2022):
+def tetris(input, rocks=2022, debug=False):
    shapes = [  # Bottom row first
       ['####'],
       ['.#.', '###', '.#.'],
@@ -10,9 +10,9 @@ def tetris(input, rocks=2022):
       ['#', '#', '#', '#'],
       ['##', '##']
    ]
-   cavern = ['+-------+']
+   cavern = []
 
-   def collides(shape, x, y):
+   def collides(cavern, shape, x, y):
       return any(
             cavern[y + dy][x + dx] not in '.@'
             and shape[dy][dx] == '#'
@@ -31,54 +31,87 @@ def tetris(input, rocks=2022):
                line[x + dx] = glyph
          yield ''.join(line)
 
-   def bottom(cav):
+   def window(cav):
       peaks = [
          max([y for y in range(len(cav)) if cav[y][x] == '#'], default=0)
          for x in range(1, 8)
       ]
-      return min(peaks, default=0)
+      bottom = max([y for y in range(len(cav)) if cav[y][1:8] == '#######'], default=0)
+      # return min(peaks, default=0), max(peaks, default=0)
+      return bottom, max(peaks, default=0)
 
-   def draw(cav):
-      print('\n'.join(reversed(cav)))
+   def draw(cav, offset=0):
+      for y in reversed(range(len(cav))):
+         print(f"{y+offset:>4} {cav[y]}")
 
    gas_index = 0
    scrolled = 0
    height = 0
+   cavern = ['+-------+']
+   seen = {}
+   scores = []
+
+   assert window(cavern) == (0, 0)
+   logged = 1
+
    for shape_index in range(rocks):
       shape = shapes[shape_index % len(shapes)]
+      if shape_index == logged * 10:
+         print(f"Shape #{shape_index}: height={height} scrolled={scrolled} seen={len(seen)} scores={len(scores)}")
+         logged = shape_index
       x, y = 3, height + 4
-      add_lines = y + len(shape) + 1 - len(cavern)
+      add_lines = y + len(shape) - len(cavern)
       if add_lines:
          cavern.extend(['|.......|'] * add_lines)
       while True:
-         # print(f"\033[2JRock falls from {x},{y} height={height}")
-         # draw(list(paint(cavern, shape, x, y, '@')))
          gas = input[gas_index % len(input)]
          gas_index += 1
          dx = -1 if gas == '<' else 1
          # Check for collision with wall or fixed shape
-         if not collides(shape, x + dx, y):
-            # print(f"Jet of gas pushes rock {'left' if dx < 0 else 'right'}")
+         if not collides(cavern, shape, x + dx, y):
             x += dx
-         else:
-            # print(f"Jet of gas pushes rock {'left' if dx < 0 else 'right'} but nothing happens")
-            pass
-         if collides(shape, x, y - 1):
-            # print("Rock falls one unit, causing it to come to rest")
+         if collides(cavern, shape, x, y - 1):
             cavern = list(paint(cavern, shape, x, y, '#'))
-            # draw(cavern)
-            bot = min(
-               max(y for y in range(1, len(cavern)))
-               for x in range(1, 8)
-               if cavern[y][x] == '#')
-            height = max(height, y + len(shape) - 1)
+            bottom, top = window(cavern)
+            assert top == max(height, y + len(shape) - 1)
+            height = top
+            # print(f"Shape #{shape_index}: height={height} scrolled={scrolled} bottom={bottom} shape={shape} period={len(input) * len(shapes)}")
+            if bottom > 1:
+               rep = '\n'.join(cavern)
+               state = (shape_index, bottom, top, scrolled, top + scrolled)
+               if (prev := seen.get(rep)) is not None:
+                  period = state[0] - prev[0]
+                  cycles = rocks // period
+                  remainder = rocks % period
+                  print(f"{shape_index}: period={period} cycles={cycles} remainder={remainder} scores={len(scores)}")
+                  assert len(scores) > remainder
+                  score = cycles * (state[-1] - prev[-1]) + scores[remainder]
+                  print(f"Shape #{shape_index}: have seen this state before: {prev} -> {state}: period={period} cycles={cycles} remainder={remainder} score={score}")
+                  return score
+               else:
+                  seen[rep] = state
+               if debug > 1:
+                  draw(cavern)
+               scrolled += bottom
+               height -= bottom 
+               cavern = [cavern[0]] + cavern[bottom+1:]
+               if debug > 1:
+                  print(f"> Shape #{shape_index}: height={height} scrolled={scrolled}")
+                  draw(cavern)
+
+            scores.append(top + scrolled)
             break
          y -= 1
 
-   return height
+   if debug:
+      print(f"Shape #{shape_index}: height={height} scrolled={scrolled} bottom={bottom} shape={shape}")
+      draw(cavern, scrolled)
+   return height + scrolled
 
-assert tetris('>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>', 2022) ==  3068
 
-print(tetris(Puzzle(day=17).input_data.strip()))
+ex18 = '>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>'
+assert tetris(ex18, 2022) ==  3068
+assert tetris(ex18, 10**12) == 1514285714288
 
-# print(tetris(Puzzle(day=17).input_data.strip(), 3168))
+# print(tetris(Puzzle(day=17).input_data.strip(), 2022))
+# print(tetris(Puzzle(day=17).input_data.strip(), 10**12))
