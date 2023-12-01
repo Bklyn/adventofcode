@@ -46,7 +46,6 @@ def cavern(input, part_b=False):
             if move > 1000:
                 done = True
                 break
-
     return len(grains)
 
 
