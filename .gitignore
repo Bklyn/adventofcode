@@ -1,3 +1,4 @@
 *~
 *.ans
 build/
+__pycache__/
