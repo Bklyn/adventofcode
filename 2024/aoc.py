@@ -28,7 +28,7 @@ from aocd import get_data
 from aocd.models import Puzzle as AOCDPuzzle
 
 
-def Puzzle(day, year=2022):
+def Puzzle(day, year=2024):
     return AOCDPuzzle(year=year, day=day)
 
 
