@@ -2,3 +2,4 @@
 *.ans
 build/
 __pycache__/
+.venv/
