@@ -75,6 +75,14 @@ def atom(token):
             return token
 
 
+def parse_grid(input: str) -> dict:
+    return dict(
+        ((y, x), c)
+        for y, line in enumerate(input.splitlines())
+        for x, c in enumerate(line)
+    )
+
+
 ################ Functions on Iterables
 
 
