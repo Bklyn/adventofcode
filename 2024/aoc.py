@@ -5,6 +5,7 @@
 # http://nbviewer.jupyter.org/url/norvig.com/ipython/Advent%20of%20Code.ipynb
 
 import re
+from typing import Callable
 import numpy as np
 import math
 import random
@@ -12,6 +13,7 @@ import random
 from collections import Counter, defaultdict, namedtuple, deque, abc, OrderedDict
 from functools import lru_cache
 from itertools import (
+    pairwise,
     permutations,
     combinations,
     chain,
@@ -75,9 +77,9 @@ def atom(token):
             return token
 
 
-def parse_grid(input: str) -> dict:
+def parse_grid(input: str, transform: Callable = identity) -> dict:
     return dict(
-        ((y, x), c)
+        ((y, x), transform(c))
         for y, line in enumerate(input.splitlines())
         for x, c in enumerate(line)
     )
