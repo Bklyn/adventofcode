@@ -80,8 +80,8 @@ def atom(token):
 def parse_grid(input: str, transform: Callable = identity) -> dict:
     return dict(
         ((y, x), transform(c))
-        for y, line in enumerate(input.splitlines())
-        for x, c in enumerate(line)
+        for y, line in enumerate(input.strip().splitlines())
+        for x, c in enumerate(line.lstrip())
     )
 
 
