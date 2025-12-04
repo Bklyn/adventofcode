@@ -4,6 +4,8 @@
 #
 # http://nbviewer.jupyter.org/url/norvig.com/ipython/Advent%20of%20Code.ipynb
 
+# ruff: noqa: F401
+
 import re
 from typing import Callable
 import numpy as np
@@ -13,17 +15,13 @@ import random
 from collections import Counter, defaultdict, namedtuple, deque, abc, OrderedDict
 from functools import lru_cache
 from itertools import (
-    pairwise,
-    permutations,
     combinations,
     chain,
-    cycle,
-    product,
     islice,
     takewhile,
     zip_longest,
-    count as count_from,
 )
+import operator as op
 from heapq import heappop, heappush
 
 from aocd.models import Puzzle as AOCDPuzzle
@@ -33,24 +31,20 @@ def Puzzle(day, year=2025):
     return AOCDPuzzle(year=year, day=day)
 
 
-identity = lambda x: x
+def identity(x):
+    return x
+
+
 letters = "abcdefghijklmnopqrstuvwxyz"
 
 cache = lru_cache(None)
 
 cat = "".join
 
-Ø = frozenset()  # Empty set
 inf = float("inf")
 BIG = 10**999
 
 ################ Functions for Input, Parsing
-
-
-def Input(day):
-    "Open this day's input file."
-    filename = "{}.txt".format(day)
-    return open(filename)
 
 
 def array(lines):
@@ -138,11 +132,6 @@ def overlapping(iterable, n):
             result.append(x)
             if len(result) == n:
                 yield tuple(result)
-
-
-def pairwise(iterable):
-    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    return overlapping(iterable, 2)
 
 
 def sequence(iterable, type=tuple):
@@ -234,8 +223,6 @@ def multiply(numbers):
         result *= n
     return result
 
-
-import operator as op
 
 operations = {
     ">": op.gt,
@@ -334,7 +321,10 @@ def Astar(start, moves_func, h_func, cost_func=always(1), debug=False):
     ]  # A priority queue, ordered by path length, f = g + h
     previous = {start: None}  # start state has no previous state; other states will
     path_cost = {start: 0}  # The cost of the best path to a state.
-    Path = lambda s: ([] if (s is None) else Path(previous[s]) + [s])
+
+    def Path(s):
+        return [] if (s is None) else Path(previous[s]) + [s]
+
     while frontier:
         (f, s) = heappop(frontier)
         if h_func(s) == 0:
