@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
-from aoc import *
-
 
 def invalid_id(i: int) -> int:
     s = str(i)
-    l = len(s)
-    if l % 2 == 0 and s[: l // 2] == s[l // 2 :]:
+    length = len(s)
+    if length % 2 == 0 and s[: length // 2] == s[length // 2 :]:
         return i
     return 0
 

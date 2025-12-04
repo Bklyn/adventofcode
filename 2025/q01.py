@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-from aoc import *
 
-
-def unlock(input: str, dial=100, pos=50):
+def unlock_wrong(input: str, dial=100, pos=50):
     zeroes = 0
     thru_zero = 0
     for step in input.strip().splitlines():
@@ -21,21 +19,18 @@ def unlock(input: str, dial=100, pos=50):
     return zeroes, thru_zero
 
 
-def unlock_slowly(input: str, dial=100, pos=50):
+def unlock(input: str, dial=100, pos=50):
     zeroes = 0
     thru_zero = 0
     for operation in input.strip().splitlines():
         direction = -1 if operation[0] == "L" else 1
-        for click in range(int(operation[1:])):
+        for _ in range(int(operation[1:])):
             pos = (pos + direction) % dial
             if pos == 0:
                 thru_zero += 1
         if pos == 0:
             zeroes += 1
     return (zeroes, thru_zero)
-
-
-unlock = unlock_slowly
 
 
 def test_unlock():

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-from aoc import *
-
 
 def joltage(bank: str, digits: int = 2) -> int:
     best = 0
