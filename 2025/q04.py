@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from aoc import *
+from aoc import parse_grid, neighbors8
 from aocd import data
 
 
