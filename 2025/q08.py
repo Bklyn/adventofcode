@@ -8,16 +8,17 @@ import operator
 from functools import reduce
 
 
+def euclidian_distance(p, q):
+    return math.sqrt(sum(leg**2 for leg in (p1 - q1 for p1, q1 in zip(p, q))))
+
+
 def longest_circuits(input: str, npairs: int) -> int:
     boxes = array(input)
-    distances = {}
-    for i, (x, y, z) in enumerate(boxes):
-        p = x, y, z
-        for j in range(i + 1, len(boxes)):
-            xx, yy, zz = q = boxes[j]
-            dist = math.sqrt((xx - x) ** 2 + (yy - y) ** 2 + (zz - z) ** 2)
-            distances[p, q] = dist
-
+    distances = dict(
+        ((p, q), euclidian_distance(p, q))
+        for i, p in enumerate(boxes)
+        for q in boxes[i + 1 :]
+    )
     closest = sorted(distances.keys(), key=lambda k: distances[k])
 
     def connect(circuits, p, q):
