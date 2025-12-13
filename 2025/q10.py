@@ -6,7 +6,11 @@ from aocd import data
 import time
 import collections
 from heapq import heappush, heappop
-import numpy as np
+from collections import Counter
+import itertools
+import sys
+
+sys.setrecursionlimit(10**6)
 
 
 def parse_lights(lights: str) -> int:
@@ -59,19 +63,56 @@ def solve_joltages(buttons, joltages) -> int:
     assert False, f"Cannot solve {buttons} {joltages}"
 
 
-def solve_joltages2(buttons, joltages) -> int:
-    # buttons = [[1 * (i in b) for i in range(len(joltages))] for b in raw_buttons]
-    print(f"solve: {joltages=} {buttons=} {buttons=}")
-    mtx = np.array(
-        [[(1 if ji in b else 0) for b in buttons] for ji in range(len(joltages))]
-    )
-    print(mtx, joltages)
-    return np.linalg.solve(mtx, joltages)
+def reach_parity(buttons, joltages, seen=dict(), debug=False):
+    if all(j == 0 for j in joltages):
+        return 0
+
+    if joltages in seen:
+        return seen[joltages]
+
+    best = float("inf")
+
+    if debug:
+        print(f"{joltages=} {len(seen)=}")
+
+    # Press all possible combinations of buttons
+    for buttons_pressed in itertools.chain.from_iterable(
+        itertools.combinations(range(len(buttons)), pattern_len)
+        for pattern_len in range(len(buttons) + 1)
+    ):
+        counts = Counter()
+        for idx in buttons_pressed:
+            counts.update(buttons[idx])
+        if debug:
+            print(
+                f"> {joltages=} pattern={tuple(counts[i] for i in range(len(joltages)))}"
+            )
+        if all(
+            counts[i] <= j and counts[i] % 2 == j % 2 for i, j in enumerate(joltages)
+        ):
+            residual = tuple(j - counts[i] for i, j in enumerate(joltages))
+            assert all(r % 2 == 0 for r in residual)
+            presses = len(buttons_pressed) + 2 * reach_parity(
+                buttons, tuple(r // 2 for r in residual), seen, debug
+            )
+            best = min(best, presses)
+            if debug:
+                print(
+                    f"> {len(buttons_pressed)} {buttons_pressed=} pattern={tuple(counts[i] for i in range(len(joltages)))} {residual=} {presses=} {best=}"
+                )
+
+    #    if best != float("inf"):
+    seen[tuple(joltages)] = best
+    return best
+
+
+def solve_joltages2(buttons, joltages, debug=False) -> int:
+    return reach_parity(buttons, tuple(joltages), seen=dict(), debug=debug)
 
 
 def factory(input: str) -> int:
     part1, part2 = 0, 0
-    for line in input.strip().splitlines():
+    for linum, line in enumerate(input.strip().splitlines(), 1):
         line_start = time.time()
         lights, *buttons, joltages = (
             line.replace("(", "")
@@ -84,7 +125,7 @@ def factory(input: str) -> int:
         raw_buttons = [vector(b) for b in buttons]
         buttons = [parse_buttons(b) for b in buttons]
         joltages = vector(joltages)
-        print(f"{goal:6}/{bin(goal):<10} {raw_buttons} {joltages} ", end="")
+        print(f"> {linum} {goal:6}/{bin(goal):<10} {raw_buttons} {joltages} ", end="")
         todo = collections.deque()
         todo.append((0, 0))
         while todo:
@@ -108,7 +149,10 @@ def test_factory():
     ex = """[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
 [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
 [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}"""
-    assert 10 == solve_joltages2(
+    assert 197 == solve_joltages2(
+        [(0, 3), (0, 1, 2), (1, 2, 3)], (23, 188, 188, 183), debug=True
+    )
+    assert 11 == solve_joltages2(
         [(0, 1, 2, 3, 4), (0, 3, 4), (0, 1, 2, 4, 5), (1, 2)], (10, 11, 11, 5, 10, 5)
     )
     assert (7, 33) == factory(ex)
