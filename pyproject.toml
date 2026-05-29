@@ -1,0 +1,10 @@
+[tool.pytest.ini_options]
+python_files = ["q*.py", "day*.py"]
+python_functions = ["test_*"]
+markers = [
+    "real: tests against real puzzle input (may be slow)",
+]
+addopts = "-m 'not real'"
+
+[tool.ruff.lint]
+ignore = ["F403"]

@@ -8,7 +8,6 @@
 
 import re
 from typing import Callable
-import numpy as np
 import math
 import random
 
@@ -342,4 +341,4 @@ def Astar(start, moves_func, h_func, cost_func=always(1), debug=False):
 def bfs(start, moves_func, goals):
     "Breadth-first search"
     goal_func = goals if callable(goals) else lambda s: s in goals
-    return Astar(start, moves_func, lambda s: (0 if goal_func(s) else 1))
+    return Astar(start, moves_func, lambda s: 0 if goal_func(s) else 1)
