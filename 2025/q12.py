@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 from aocd import data
-from aoc import vector
+from aoc import vector, solver
 
 
+@solver(part=1)
 def fit_presents(input: str) -> int:
     presents = []
     answer = 0
