@@ -61,3 +61,26 @@ def test_registered_solvers_sorted_by_part(monkeypatch):
 
     assert [e.part for e in aoc.registered_solvers(97)] == [1, 2]
     aoc._REGISTRY.pop(97, None)
+
+
+def test_registration_through_real_modules():
+    """Importing the import-safe day modules registers the expected solvers."""
+    import importlib
+
+    for name in ("q01", "q02", "q03", "q09", "q10"):
+        importlib.import_module(name)
+
+    def labels(day):
+        return [e.label for e in aoc.registered_solvers(day)]
+
+    def parts(day):
+        return [e.part for e in aoc.registered_solvers(day)]
+
+    assert labels(1) == ["unlock"]
+    assert labels(2) == ["invalid_ids", "invalid_ids(True)"]
+    assert labels(3) == ["total_joltage", "total_joltage(12)"]
+    assert labels(9) == ["movie_theater", "largest_inside_rectangle"]
+    assert labels(10) == ["part_one", "part_two"]
+    assert parts(2) == [1, 2]
+    assert aoc.registered_solvers(2)[1].args == (True,)
+    assert aoc.registered_solvers(3)[1].args == (12,)

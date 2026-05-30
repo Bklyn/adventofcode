@@ -24,6 +24,8 @@ from itertools import combinations
 
 import pytest
 
+from aoc import solver
+
 
 def parse(line: str):
     """Return (light_goal_bitmask, buttons_as_index_tuples, joltage_goal)."""
@@ -99,6 +101,7 @@ def min_presses(joltage_goal: tuple[int, ...], buttons) -> int:
     return solve(joltage_goal)
 
 
+@solver(part=1)
 def part_one(raw: str) -> int:
     total = 0
     for line in raw.strip().splitlines():
@@ -108,6 +111,7 @@ def part_one(raw: str) -> int:
     return total
 
 
+@solver(part=2)
 def part_two(raw: str) -> int:
     total = 0
     for line in raw.strip().splitlines():
