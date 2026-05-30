@@ -1,162 +1,144 @@
 #!/usr/bin/env python3
+"""Advent of Code 2025, Day 10.
 
-from aoc import vector
-from aocd import data
+Each line describes one machine:
+    [.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+      |      \\------- buttons (index sets) -------/    \\-- joltages --/
+    lights
 
-import time
-import collections
-from heapq import heappush, heappop
-from collections import Counter
-import itertools
-import sys
+A button refers to a set of positions. The two parts reuse the same buttons
+but with different algebra:
 
-sys.setrecursionlimit(10**6)
+  Part 1 (lights): pressing a button TOGGLES its positions (mod 2). Find the
+    fewest presses to turn the lights into the target pattern. Toggles cancel,
+    so each button is pressed 0 or 1 times -> smallest subset whose XOR matches.
 
+  Part 2 (joltages): pressing a button ADDS 1 to each of its positions. Find
+    the fewest presses to reach the exact joltage targets.
 
-def parse_lights(lights: str) -> int:
-    lcb = "".join(reversed(lights[1:-1]))
-    return int(lcb.replace("#", "1").replace(".", "0"), 2)
+Both answers sum the per-line cost across every line.
+"""
 
+from functools import cache
+from itertools import combinations
 
-def parse_buttons(buttons: str) -> int:
-    val = 0
-    for b in vector(buttons):
-        val |= 1 << b
-    return val
-
-
-def solve_joltages(buttons, joltages) -> int:
-    print(f"solve: {joltages} {buttons}")
-    goal = tuple(joltages)
-    todo = [(0, tuple([0] * len(joltages)))]
-    seen = set()
-    buttons = [[1 * (i in b) for i in range(len(joltages))] for b in buttons]
-    print(buttons)
-    assert all(len(b) == len(joltages) for b in buttons)
-
-    while todo:
-        presses, power = heappop(todo)
-        if power == goal:
-            return presses
-
-        for b in buttons:
-            new_power = tuple(v + dv for v, dv in zip(power, b))
-            if any(new_power[i] > joltages[i] for i in range(len(joltages))):
-                continue
-            if new_power in seen:
-                continue
-            heappush(todo, (presses + 1, new_power))
-            seen.add(new_power)
-
-        # print(f"{len(todo)} {presses} {power} {goal} {len(seen)}")
-
-    # solve: (231, 230, 190, 221, 241, 24, 24)
-    # A = [0, 0, 0, 0, 1, 1, 1],
-    # B = [1, 1, 0, 1, 1, 0, 0],
-    # C = [1, 0, 0, 0, 1, 1, 1],
-    # D = [1, 1, 0, 1, 0, 0, 0],
-    # E = [1, 1, 1, 1, 1, 0, 0],
-    # F = [0, 1, 0, 0, 1, 0, 0]
-    # sum(B, C, D, E) = 231
-    # sum(B, D, E, F) = 230
-    # sum(E) = 190
-    assert False, f"Cannot solve {buttons} {joltages}"
+import pytest
 
 
-def reach_parity(buttons, joltages, seen=dict(), debug=False):
-    if all(j == 0 for j in joltages):
-        return 0
-
-    if joltages in seen:
-        return seen[joltages]
-
-    best = float("inf")
-
-    if debug:
-        print(f"{joltages=} {len(seen)=}")
-
-    # Press all possible combinations of buttons
-    for buttons_pressed in itertools.chain.from_iterable(
-        itertools.combinations(range(len(buttons)), pattern_len)
-        for pattern_len in range(len(buttons) + 1)
-    ):
-        counts = Counter()
-        for idx in buttons_pressed:
-            counts.update(buttons[idx])
-        if debug:
-            print(
-                f"> {joltages=} pattern={tuple(counts[i] for i in range(len(joltages)))}"
-            )
-        if all(
-            counts[i] <= j and counts[i] % 2 == j % 2 for i, j in enumerate(joltages)
-        ):
-            residual = tuple(j - counts[i] for i, j in enumerate(joltages))
-            assert all(r % 2 == 0 for r in residual)
-            presses = len(buttons_pressed) + 2 * reach_parity(
-                buttons, tuple(r // 2 for r in residual), seen, debug
-            )
-            best = min(best, presses)
-            if debug:
-                print(
-                    f"> {len(buttons_pressed)} {buttons_pressed=} pattern={tuple(counts[i] for i in range(len(joltages)))} {residual=} {presses=} {best=}"
-                )
-
-    #    if best != float("inf"):
-    seen[tuple(joltages)] = best
-    return best
+def parse(line: str):
+    """Return (light_goal_bitmask, buttons_as_index_tuples, joltage_goal)."""
+    lights, *buttons, joltages = line.split()
+    light_goal = sum(1 << i for i, ch in enumerate(lights[1:-1]) if ch == "#")
+    buttons = [tuple(int(n) for n in b[1:-1].split(",")) for b in buttons]
+    joltage_goal = tuple(int(n) for n in joltages[1:-1].split(","))
+    return light_goal, buttons, joltage_goal
 
 
-def solve_joltages2(buttons, joltages, debug=False) -> int:
-    return reach_parity(buttons, tuple(joltages), seen=dict(), debug=debug)
+def min_toggles(light_goal: int, button_masks: list[int]) -> int:
+    """Part 1: smallest number of buttons whose XOR equals the light goal.
+
+    We try subsets in increasing size and return the first match, so the very
+    first hit is provably minimal. With <=13 buttons this is instant.
+    """
+    n = len(button_masks)
+    for size in range(n + 1):
+        for combo in combinations(range(n), size):
+            lit = 0
+            for i in combo:
+                lit ^= button_masks[i]
+            if lit == light_goal:
+                return size
+    raise ValueError(f"light goal {light_goal:b} is unreachable")
 
 
-def factory(input: str) -> int:
-    part1, part2 = 0, 0
-    for linum, line in enumerate(input.strip().splitlines(), 1):
-        line_start = time.time()
-        lights, *buttons, joltages = (
-            line.replace("(", "")
-            .replace(")", "")
-            .replace("{", "")
-            .replace("}", "")
-            .split(" ")
-        )
-        goal = parse_lights(lights)
-        raw_buttons = [vector(b) for b in buttons]
-        buttons = [parse_buttons(b) for b in buttons]
-        joltages = vector(joltages)
-        print(f"> {linum} {goal:6}/{bin(goal):<10} {raw_buttons} {joltages} ", end="")
-        todo = collections.deque()
-        todo.append((0, 0))
-        while todo:
-            presses, lit = todo.popleft()
-            if lit == goal:
-                break
-            for b in buttons:
-                lit_now = lit ^ b
-                todo.append((presses + 1, lit_now))
-        else:
-            assert False, "Cannot find any combination of buttons to reach {goal}"
-        part1 += presses
-        print(f"{presses} -> {time.time() - line_start:.3}s [{part1}]")
-        presses = solve_joltages2(raw_buttons, joltages)
-        part2 += presses
-        print(f"{raw_buttons} -> {joltages}: {presses} [{part2}]")
-    return part1, part2
+def patterns_by_parity(buttons, num_vars: int):
+    """Group every 'press each of a subset once' pattern by its parity vector.
+
+    Returns dict[parity_vector -> list[(pattern, cost)]], where cost is the
+    cheapest subset size producing that pattern (sizes are visited ascending,
+    so the first occurrence wins). Bucketing by parity lets the recursion scan
+    only the patterns whose parity can possibly match the goal, instead of all
+    2**n of them.
+    """
+    buckets: dict[tuple[int, ...], dict[tuple[int, ...], int]] = {}
+    n = len(buttons)
+    for size in range(n + 1):
+        for combo in combinations(range(n), size):
+            counts = [0] * num_vars
+            for i in combo:
+                for position in buttons[i]:
+                    counts[position] += 1
+            counts = tuple(counts)
+            parity = tuple(c & 1 for c in counts)
+            buckets.setdefault(parity, {}).setdefault(counts, size)
+    return {parity: list(patterns.items()) for parity, patterns in buckets.items()}
 
 
-def test_factory():
-    ex = """[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+def min_presses(joltage_goal: tuple[int, ...], buttons) -> int:
+    """Part 2: fewest presses to reach the joltage goal.
+
+    Parity-halving recursion: pick a subset to press once so every variable's
+    parity matches the goal; the remainder is then even, so halve it and recurse
+    (each deeper press counts double). Memoised over the (shrinking) goal.
+    """
+    buckets = patterns_by_parity(buttons, len(joltage_goal))
+
+    @cache
+    def solve(goal: tuple[int, ...]) -> int:
+        if not any(goal):
+            return 0
+        parity = tuple(g & 1 for g in goal)
+        best = float("inf")
+        # Parity already matches by construction, so only check the magnitude.
+        for pattern, cost in buckets.get(parity, ()):
+            if all(p <= g for p, g in zip(pattern, goal)):
+                residual = tuple((g - p) // 2 for p, g in zip(pattern, goal))
+                best = min(best, cost + 2 * solve(residual))
+        return best
+
+    return solve(joltage_goal)
+
+
+def part_one(raw: str) -> int:
+    total = 0
+    for line in raw.strip().splitlines():
+        light_goal, buttons, _ = parse(line)
+        masks = [sum(1 << position for position in b) for b in buttons]
+        total += min_toggles(light_goal, masks)
+    return total
+
+
+def part_two(raw: str) -> int:
+    total = 0
+    for line in raw.strip().splitlines():
+        _, buttons, joltage_goal = parse(line)
+        total += min_presses(joltage_goal, buttons)
+    return total
+
+
+EXAMPLE = """[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
 [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
 [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}"""
-    assert 197 == solve_joltages2(
-        [(0, 3), (0, 1, 2), (1, 2, 3)], (23, 188, 188, 183), debug=True
-    )
-    assert 11 == solve_joltages2(
-        [(0, 1, 2, 3, 4), (0, 3, 4), (0, 1, 2, 4, 5), (1, 2)], (10, 11, 11, 5, 10, 5)
-    )
-    assert (7, 33) == factory(ex)
+
+
+def test_q10_example():
+    assert part_one(EXAMPLE) == 7
+    assert part_two(EXAMPLE) == 33
+
+
+@pytest.mark.real
+def test_q10_real(puzzle):
+    raw = puzzle.input_data
+    assert part_one(raw) == 417
+    assert part_two(raw) == 16765
+
+
+def main():
+    from aocd import data
+
+    print(part_one(data))
+    print(part_two(data))
 
 
 if __name__ == "__main__":
-    print(factory(data))
+    main()

@@ -31,7 +31,7 @@ SOLVERS = {
     6: [("squid_math",), ("squid_math2",)],
     7: [("tachyon_beams",), ("tachyon_timelines",)],
     8: [("longest_circuits", 1000)],
-    9: [("movie_theater",), ("find_largest_rectangle_optimized",)],
+    9: [("movie_theater",), ("largest_inside_rectangle",)],
     10: [("factory",)],
     11: [("rack_graph",), ("server_rack",)],
     12: [("fit_presents",)],
