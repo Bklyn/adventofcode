@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from aoc import solver
+
 
 def invalid_id(i: int) -> int:
     s = str(i)
@@ -24,6 +26,8 @@ def repeated_id(val: int) -> int:
     return 0
 
 
+@solver(part=1)
+@solver(part=2, args=(True,))
 def invalid_ids(input: str, part2=False) -> int:
     result = 0
     input = "".join(input.strip().splitlines())

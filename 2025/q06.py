@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from aoc import array
+from aoc import array, solver
 from aocd import data
 from functools import reduce
 import operator
@@ -9,6 +9,7 @@ import itertools
 OPS = {"*": operator.mul, "+": operator.add}
 
 
+@solver(part=1)
 def squid_math(input: str) -> int:
     data = array(input)
     assert all(len(row) == len(data[0]) for row in data[1:])
@@ -19,6 +20,7 @@ def squid_math(input: str) -> int:
     return sum(answers)
 
 
+@solver(part=2)
 def squid_math2(input: str) -> int:
     lines = input.splitlines()
     # find colunms with all spaces; add zero and trailing column

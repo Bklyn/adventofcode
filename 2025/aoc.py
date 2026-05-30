@@ -7,6 +7,8 @@
 # ruff: noqa: F401
 
 import re
+import os
+from dataclasses import dataclass
 from typing import Callable
 import math
 import random
@@ -342,3 +344,52 @@ def bfs(start, moves_func, goals):
     "Breadth-first search"
     goal_func = goals if callable(goals) else lambda s: s in goals
     return Astar(start, moves_func, lambda s: 0 if goal_func(s) else 1)
+
+
+################ Solver registry (used by bench.py for auto-discovery)
+
+
+@dataclass(frozen=True)
+class SolverEntry:
+    """One benchmarkable solver: the function plus how to call and label it."""
+
+    func: Callable
+    day: int
+    part: int
+    args: tuple
+    label: str
+
+
+_REGISTRY: dict[int, list[SolverEntry]] = {}
+
+
+def _day_from_file(path: str) -> int:
+    "Extract the AoC day number from a qNN.py source path."
+    name = os.path.basename(path)
+    match = re.search(r"q(\d+)\.py$", name)
+    if not match:
+        raise ValueError(
+            f"@solver must decorate a function in a qNN.py file, got {path!r}"
+        )
+    return int(match.group(1))
+
+
+def solver(part: int, args: tuple = ()):
+    "Register a solver function for benchmark discovery. Returns it unchanged."
+
+    def register(func: Callable) -> Callable:
+        day = _day_from_file(func.__code__.co_filename)
+        label = (
+            func.__name__
+            if not args
+            else f"{func.__name__}({', '.join(map(str, args))})"
+        )
+        _REGISTRY.setdefault(day, []).append(SolverEntry(func, day, part, args, label))
+        return func
+
+    return register
+
+
+def registered_solvers(day: int) -> list[SolverEntry]:
+    "Return the registered solvers for a day, sorted by part."
+    return sorted(_REGISTRY.get(day, []), key=lambda e: e.part)

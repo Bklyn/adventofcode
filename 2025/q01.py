@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from aoc import solver
+
 
 def unlock_wrong(input: str, dial=100, pos=50):
     zeroes = 0
@@ -19,6 +21,7 @@ def unlock_wrong(input: str, dial=100, pos=50):
     return zeroes, thru_zero
 
 
+@solver(part=1)
 def unlock(input: str, dial=100, pos=50):
     zeroes = 0
     thru_zero = 0

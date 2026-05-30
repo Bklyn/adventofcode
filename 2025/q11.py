@@ -2,7 +2,7 @@
 
 
 from aocd import data
-from aoc import vector
+from aoc import vector, solver
 from collections import deque
 
 
@@ -14,6 +14,7 @@ def parse_rack(input: str) -> dict:
     return devices
 
 
+@solver(part=1)
 def rack_graph(input: str) -> int:
     devices = parse_rack(input)
     assert "you" in devices
@@ -29,6 +30,7 @@ def rack_graph(input: str) -> int:
     return num_paths
 
 
+@solver(part=2)
 def server_rack(input: str) -> int:
     devices = parse_rack(input)
 

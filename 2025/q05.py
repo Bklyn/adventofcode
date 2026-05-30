@@ -2,7 +2,10 @@
 
 from aocd import data
 
+from aoc import solver
 
+
+@solver(part=1)
 def freshness(input: str) -> int:
     fr, ingredients = input.strip().split("\n\n")
     fresh_ranges = [line.split("-", 1) for line in fr.splitlines()]

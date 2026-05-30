@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from aoc import array
+from aoc import array, solver
 
 
 def area(p, q):
@@ -12,6 +12,7 @@ def area(p, q):
     return dy * dx
 
 
+@solver(part=1)
 def movie_theater(input: str) -> int:
     """Part 1: largest rectangle area spanned by any two vertices."""
     corners = array(input)
@@ -95,6 +96,7 @@ def build_solid_mask(compressed, width, height):
     return grid
 
 
+@solver(part=2)
 def largest_inside_rectangle(input: str) -> int:
     """Part 2: largest rectangle between two vertices that lies fully inside
     the polygon.

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-from aoc import parse_grid, first
+from aoc import parse_grid, first, solver
 from aocd import data
 
 from collections import Counter
 
 
+@solver(part=1)
 def tachyon_beams(input: str):
     grid = parse_grid(input)
     maxy = max(y for y, _ in grid.keys())
@@ -30,6 +31,7 @@ def tachyon_beams(input: str):
     return splits
 
 
+@solver(part=2)
 def tachyon_timelines(input: str):
     grid = parse_grid(input)
     maxy = max(y for y, _ in grid.keys())

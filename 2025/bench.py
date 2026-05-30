@@ -13,29 +13,14 @@ Usage:
 """
 
 import argparse
+import glob
 import importlib
 import json
 import os
+import re
 import statistics
 import sys
 import time
-
-# Solver registry: day -> list of (func_name, args) to call
-# Each entry calls func(data, *args) and captures the return value.
-SOLVERS = {
-    1: [("unlock",)],
-    2: [("invalid_ids",), ("invalid_ids", True)],
-    3: [("total_joltage",), ("total_joltage", 12)],
-    4: [("forklift",), ("forklift", 10**10)],
-    5: [("freshness",)],
-    6: [("squid_math",), ("squid_math2",)],
-    7: [("tachyon_beams",), ("tachyon_timelines",)],
-    8: [("longest_circuits", 1000)],
-    9: [("movie_theater",), ("largest_inside_rectangle",)],
-    10: [("factory",)],
-    11: [("rack_graph",), ("server_rack",)],
-    12: [("fit_presents",)],
-}
 
 
 def load_module(day):
@@ -53,50 +38,38 @@ def get_data(day):
 
 def run_day(day, data, repeat=1, quiet=False):
     """Run all solvers for a day. Returns list of (label, answer, median_ms)."""
-    mod = load_module(day)
+    from aoc import registered_solvers
+
+    load_module(day)  # import triggers @solver registration
     results = []
 
-    for entry in SOLVERS.get(day, []):
-        func_name = entry[0]
-        extra_args = entry[1:]
-        func = getattr(mod, func_name)
-
-        # For day 9 part 2, input needs array() preprocessing
-        if func_name == "find_largest_rectangle_optimized":
-            from aoc import array
-
-            call_data = array(data)
-        else:
-            call_data = data
-
-        label = (
-            func_name
-            if not extra_args
-            else f"{func_name}({', '.join(map(str, extra_args))})"
-        )
-
+    for entry in registered_solvers(day):
         timings = []
         answer = None
         for _ in range(repeat):
             t0 = time.perf_counter()
-            answer = func(call_data, *extra_args)
+            answer = entry.func(data, *entry.args)
             elapsed = time.perf_counter() - t0
             timings.append(elapsed * 1000)
 
         median_ms = statistics.median(timings)
-        results.append((label, answer, median_ms))
+        results.append((entry.label, answer, median_ms))
 
         if not quiet:
             ans_str = str(answer)
             if len(ans_str) > 60:
                 ans_str = ans_str[:57] + "..."
-            print(f"  Day {day:2d}  {label:<45s}  {median_ms:>10.1f} ms  → {ans_str}")
+            print(
+                f"  Day {day:2d}  {entry.label:<45s}  {median_ms:>10.1f} ms  → {ans_str}"
+            )
 
     return results
 
 
 def profile_day(day, data):
     """Run line_profiler on all solvers for a given day."""
+    from aoc import registered_solvers
+
     try:
         from line_profiler import LineProfiler
     except ImportError:
@@ -105,33 +78,32 @@ def profile_day(day, data):
 
     mod = load_module(day)
 
-    for entry in SOLVERS.get(day, []):
-        func_name = entry[0]
-        extra_args = entry[1:]
-        func = getattr(mod, func_name)
-
-        if func_name == "find_largest_rectangle_optimized":
-            from aoc import array
-
-            call_data = array(data)
-        else:
-            call_data = data
-
+    for entry in registered_solvers(day):
         lp = LineProfiler()
         # Profile the main function and any functions it calls in the same module
-        lp.add_function(func)
+        lp.add_function(entry.func)
         for attr_name in dir(mod):
             obj = getattr(mod, attr_name)
             if callable(obj) and getattr(obj, "__module__", None) == mod.__name__:
                 lp.add_function(obj)
 
         print(f"\n{'=' * 70}")
-        print(f"PROFILE: Day {day} — {func_name}({', '.join(map(str, extra_args))})")
+        print(f"PROFILE: Day {day} — {entry.label}")
         print(f"{'=' * 70}")
 
-        wrapped = lp(func)
-        wrapped(call_data, *extra_args)
+        wrapped = lp(entry.func)
+        wrapped(data, *entry.args)
         lp.print_stats()
+
+
+def available_days(script_dir):
+    """Discover day numbers from qNN.py filenames in script_dir."""
+    days = []
+    for path in glob.glob(os.path.join(script_dir, "q[0-9][0-9].py")):
+        match = re.search(r"q(\d+)\.py$", os.path.basename(path))
+        if match:
+            days.append(int(match.group(1)))
+    return sorted(days)
 
 
 def main():
@@ -157,7 +129,7 @@ def main():
     if script_dir not in sys.path:
         sys.path.insert(0, script_dir)
 
-    days = args.days or sorted(SOLVERS.keys())
+    days = args.days or available_days(script_dir)
 
     # Profile mode
     if args.profile is not None:

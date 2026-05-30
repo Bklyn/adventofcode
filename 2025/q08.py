@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from aoc import array
+from aoc import array, solver
 from aocd import data
 
 import math
@@ -12,6 +12,7 @@ def euclidian_distance(p, q):
     return math.sqrt(sum(leg**2 for leg in (p1 - q1 for p1, q1 in zip(p, q))))
 
 
+@solver(part=1, args=(1000,))
 def longest_circuits(input: str, npairs: int) -> int:
     boxes = array(input)
     distances = dict(

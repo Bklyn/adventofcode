@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-from aoc import parse_grid, neighbors8
+from aoc import parse_grid, neighbors8, solver
 from aocd import data
 
 
+@solver(part=1)
+@solver(part=2, args=(10**10,))
 def forklift(input: str, rounds: int = 1) -> int:
     grid = parse_grid(input)
     result = 0

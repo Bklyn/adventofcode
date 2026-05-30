@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from aoc import solver
+
 
 def joltage(bank: str, digits: int = 2) -> int:
     best = 0
@@ -15,6 +17,8 @@ def joltage(bank: str, digits: int = 2) -> int:
     return best
 
 
+@solver(part=1)
+@solver(part=2, args=(12,))
 def total_joltage(input: str, digits: int = 2) -> int:
     return sum(joltage(line, digits) for line in input.strip().splitlines())
 
