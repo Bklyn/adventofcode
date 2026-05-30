@@ -19,11 +19,14 @@ def unlock_fast(input: str, dial=100, pos=50):
         if remainder:
             new_pos = pos + sign * remainder
             assert -dial < pos < dial
-            # A left move reaches 0 only if it started above 0: sitting on 0 and
-            # moving left departs the mark (the next 0 is a full spin away, already
-            # in `spins`). The right branch's `>= dial` test excludes a pos-0 start
-            # for the same reason.
-            crossed = new_pos >= dial if sign == 1 else (pos != 0 and new_pos <= 0)
+            if sign == 1:
+                # Turning right: we reach the 0 mark only by hitting 100.
+                crossed = new_pos >= dial
+            else:
+                # Turning left: we reach the 0 mark at 0 -- but not if we
+                # STARTED on it (then we're leaving the mark, not crossing it;
+                # the next 0 going left is a full spin away, already in `spins`).
+                crossed = pos != 0 and new_pos <= 0
             if crossed:
                 thru_zero += 1
             pos = new_pos % dial
