@@ -126,5 +126,5 @@ ex18 = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
 assert tetris(ex18, 2022) == 3068
 # assert tetris(ex18, 10**12) == 1514285714288
 
-print(tetris(Puzzle(day=17).input_data.strip(), 2022))
-print(tetris(Puzzle(day=17).input_data.strip(), 10**12))
+print(tetris(Puzzle(day=17, year=2022).input_data.strip(), 2022))
+print(tetris(Puzzle(day=17, year=2022).input_data.strip(), 10**12))

@@ -49,7 +49,7 @@ def cavern(input, part_b=False):
     return len(grains)
 
 
-p = Puzzle(day=14)
+p = Puzzle(day=14, year=2022)
 assert cavern(p.example_data) == 24
 assert cavern(p.example_data, True) == 93
 
