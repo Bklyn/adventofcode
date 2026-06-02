@@ -4,27 +4,21 @@
 #
 # http://nbviewer.jupyter.org/url/norvig.com/ipython/Advent%20of%20Code.ipynb
 
-import re
-import numpy as np
 import math
+import operator as op
 import random
-
-from collections import Counter, defaultdict, namedtuple, deque, abc, OrderedDict
+import re
+from collections import Counter, abc, defaultdict, deque
 from functools import lru_cache
+from heapq import heappop, heappush
 from itertools import (
-    permutations,
-    combinations,
     chain,
-    cycle,
-    product,
+    combinations,
     islice,
     takewhile,
     zip_longest,
-    count as count_from,
 )
-from heapq import heappop, heappush
 
-from aocd import get_data
 from aocd.models import Puzzle as AOCDPuzzle
 
 
@@ -32,7 +26,10 @@ def Puzzle(day, year=2022):
     return AOCDPuzzle(year=year, day=day)
 
 
-identity = lambda x: x
+def identity(x):
+    x
+
+
 letters = "abcdefghijklmnopqrstuvwxyz"
 
 cache = lru_cache(None)
@@ -41,7 +38,7 @@ cat = "".join
 
 Ø = frozenset()  # Empty set
 inf = float("inf")
-BIG = 10 ** 999
+BIG = 10**999
 
 ################ Functions for Input, Parsing
 
@@ -202,7 +199,7 @@ def transpose(matrix):
 
 def isqrt(n):
     "Integer square root (rounds down)."
-    return int(n ** 0.5)
+    return int(n**0.5)
 
 
 def ints(start, end):
@@ -225,8 +222,6 @@ def multiply(numbers):
         result *= n
     return result
 
-
-import operator as op
 
 operations = {
     ">": op.gt,
@@ -325,7 +320,10 @@ def Astar(start, moves_func, h_func, cost_func=always(1), debug=False):
     ]  # A priority queue, ordered by path length, f = g + h
     previous = {start: None}  # start state has no previous state; other states will
     path_cost = {start: 0}  # The cost of the best path to a state.
-    Path = lambda s: ([] if (s is None) else Path(previous[s]) + [s])
+
+    def Path(s):
+        return [] if (s is None) else Path(previous[s]) + [s]
+
     while frontier:
         (f, s) = heappop(frontier)
         if h_func(s) == 0:
@@ -343,4 +341,4 @@ def Astar(start, moves_func, h_func, cost_func=always(1), debug=False):
 def bfs(start, moves_func, goals):
     "Breadth-first search"
     goal_func = goals if callable(goals) else lambda s: s in goals
-    return Astar(start, moves_func, lambda s: (0 if goal_func(s) else 1))
+    return Astar(start, moves_func, lambda s: 0 if goal_func(s) else 1)
