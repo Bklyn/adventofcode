@@ -28,7 +28,7 @@ from heapq import heappop, heappush
 from aocd.models import Puzzle as AOCDPuzzle
 
 
-def Puzzle(day, year):
+def Puzzle(day: int, year: int) -> AOCDPuzzle:
     return AOCDPuzzle(year=year, day=day)
 
 
