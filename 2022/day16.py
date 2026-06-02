@@ -46,5 +46,5 @@ def volcano(input):
     print(s, path)
 
 
-p = Puzzle(day=16)
+p = Puzzle(day=16, year=2022)
 assert (volcano(e.input_data) == int(e.answer_a) for e in p.examples)

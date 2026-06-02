@@ -82,7 +82,7 @@ def play_robots(instr: str, width: int = 101, height: int = 103):
 
 
 def main():
-    p = Puzzle(day=14)
+    p = Puzzle(day=14, year=2024)
     assert 12 == restroom_redoubt(p.examples[0].input_data, 11, 7)
     print(restroom_redoubt(p.input_data))
     print(play_robots(p.input_data))

@@ -4,44 +4,48 @@
 #
 # http://nbviewer.jupyter.org/url/norvig.com/ipython/Advent%20of%20Code.ipynb
 
+# ruff: noqa: F401
+
 import re
-import numpy as np
+import os
+from dataclasses import dataclass
+from typing import Callable
 import math
 import random
 
 from collections import Counter, defaultdict, namedtuple, deque, abc, OrderedDict
 from functools import lru_cache
 from itertools import (
-    permutations,
     combinations,
     chain,
-    cycle,
-    product,
     islice,
     takewhile,
     zip_longest,
-    count as count_from,
 )
+import operator as op
 from heapq import heappop, heappush
 
-identity = lambda x: x
+from aocd.models import Puzzle as AOCDPuzzle
+
+
+def Puzzle(day: int, year: int) -> AOCDPuzzle:
+    return AOCDPuzzle(year=year, day=day)
+
+
+def identity(x):
+    return x
+
+
 letters = "abcdefghijklmnopqrstuvwxyz"
 
 cache = lru_cache(None)
 
 cat = "".join
 
-Ø = frozenset()  # Empty set
 inf = float("inf")
-BIG = 10 ** 999
+BIG = 10**999
 
 ################ Functions for Input, Parsing
-
-
-def Input(day):
-    "Open this day's input file."
-    filename = "{}.txt".format(day)
-    return open(filename)
 
 
 def array(lines):
@@ -65,6 +69,14 @@ def atom(token):
             return float(token)
         except ValueError:
             return token
+
+
+def parse_grid(input: str, transform: Callable = identity) -> dict:
+    return dict(
+        ((y, x), transform(c))
+        for y, line in enumerate(input.strip().splitlines())
+        for x, c in enumerate(line.lstrip())
+    )
 
 
 ################ Functions on Iterables
@@ -121,11 +133,6 @@ def overlapping(iterable, n):
             result.append(x)
             if len(result) == n:
                 yield tuple(result)
-
-
-def pairwise(iterable):
-    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    return overlapping(iterable, 2)
 
 
 def sequence(iterable, type=tuple):
@@ -194,7 +201,7 @@ def transpose(matrix):
 
 def isqrt(n):
     "Integer square root (rounds down)."
-    return int(n ** 0.5)
+    return int(n**0.5)
 
 
 def ints(start, end):
@@ -217,8 +224,6 @@ def multiply(numbers):
         result *= n
     return result
 
-
-import operator as op
 
 operations = {
     ">": op.gt,
@@ -317,7 +322,10 @@ def Astar(start, moves_func, h_func, cost_func=always(1), debug=False):
     ]  # A priority queue, ordered by path length, f = g + h
     previous = {start: None}  # start state has no previous state; other states will
     path_cost = {start: 0}  # The cost of the best path to a state.
-    Path = lambda s: ([] if (s is None) else Path(previous[s]) + [s])
+
+    def Path(s):
+        return [] if (s is None) else Path(previous[s]) + [s]
+
     while frontier:
         (f, s) = heappop(frontier)
         if h_func(s) == 0:
@@ -335,4 +343,53 @@ def Astar(start, moves_func, h_func, cost_func=always(1), debug=False):
 def bfs(start, moves_func, goals):
     "Breadth-first search"
     goal_func = goals if callable(goals) else lambda s: s in goals
-    return Astar(start, moves_func, lambda s: (0 if goal_func(s) else 1))
+    return Astar(start, moves_func, lambda s: 0 if goal_func(s) else 1)
+
+
+################ Solver registry (used by bench.py for auto-discovery)
+
+
+@dataclass(frozen=True)
+class SolverEntry:
+    """One benchmarkable solver: the function plus how to call and label it."""
+
+    func: Callable
+    day: int
+    part: int
+    args: tuple
+    label: str
+
+
+_REGISTRY: dict[int, list[SolverEntry]] = {}
+
+
+def _day_from_file(path: str) -> int:
+    "Extract the AoC day number from a qNN.py source path."
+    name = os.path.basename(path)
+    match = re.search(r"q(\d+)\.py$", name)
+    if not match:
+        raise ValueError(
+            f"@solver must decorate a function in a qNN.py file, got {path!r}"
+        )
+    return int(match.group(1))
+
+
+def solver(part: int, args: tuple = ()):
+    "Register a solver function for benchmark discovery. Returns it unchanged."
+
+    def register(func: Callable) -> Callable:
+        day = _day_from_file(func.__code__.co_filename)
+        label = (
+            func.__name__
+            if not args
+            else f"{func.__name__}({', '.join(map(str, args))})"
+        )
+        _REGISTRY.setdefault(day, []).append(SolverEntry(func, day, part, args, label))
+        return func
+
+    return register
+
+
+def registered_solvers(day: int) -> list[SolverEntry]:
+    "Return the registered solvers for a day, sorted by part."
+    return sorted(_REGISTRY.get(day, []), key=lambda e: e.part)
