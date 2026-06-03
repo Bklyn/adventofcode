@@ -265,6 +265,7 @@ How many steps does it take to reach the first state that exactly matches a prev
 """
 
 from aoc import *
+from inputs import Input
 import math
 
 

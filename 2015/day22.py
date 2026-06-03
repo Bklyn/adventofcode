@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import io
 import random
 from collections import namedtuple
 
@@ -68,7 +67,7 @@ def wizardry(player, boss, hard=False, output=None):
         if hard:
             player = player._replace(hp=player.hp - 1)
             if player.hp <= 0:
-                return 10 ** 10, casted
+                return 10**10, casted
         armor, damage, mana, effects = age_effects(effects, output)
         player = player._replace(armor=armor, damage=damage, mana=player.mana + mana)
         spells = [s for s in Spells if s.mana <= player.mana and s.name not in effects]
@@ -76,12 +75,12 @@ def wizardry(player, boss, hard=False, output=None):
             boss = boss._replace(hp=boss.hp - player.damage)
             if boss.hp <= 0:
                 if output:
-                    print(f"This kills the Boss and we win", file=output)
+                    print("This kills the Boss and we win", file=output)
                 return spent, casted
         if not spells:
             if output:
-                print(f"Can't afford any spells - we lose", file=output)
-            return 10 ** 10, casted
+                print("Can't afford any spells - we lose", file=output)
+            return 10**10, casted
         spell = random.choice(spells)
         casted.append(spell.name)
         spent += spell.mana
@@ -94,7 +93,7 @@ def wizardry(player, boss, hard=False, output=None):
         boss = boss._replace(hp=boss.hp - spell.damage)
         if boss.hp <= 0:
             if output:
-                print(f"This kills the boss!", file=output)
+                print("This kills the boss!", file=output)
             return spent, casted
         player = player._replace(hp=player.hp + spell.healing)
         if spell.effect is not None:
@@ -121,11 +120,11 @@ def wizardry(player, boss, hard=False, output=None):
         player = player._replace(hp=player.hp - damage)
         if player.hp <= 0:
             if output:
-                print(f"The Boss wins", file=output)
-            return 10 ** 10, casted
+                print("The Boss wins", file=output)
+            return 10**10, casted
 
 
-best = 10 ** 10
+best = 10**10
 for _ in range(20_000):
     gold, casted = wizardry(
         Wizard(hp=50, mana=500, armor=0, damage=0),
@@ -136,7 +135,7 @@ for _ in range(20_000):
         print(f"Won with {gold} casting {casted}")
 print(best)
 
-best = 10 ** 10
+best = 10**10
 for _ in range(100_000):
     gold, casted = wizardry(
         Wizard(hp=50, mana=500, armor=0, damage=0),

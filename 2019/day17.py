@@ -202,6 +202,7 @@ does the vacuum robot report it has collected?
 
 import itertools
 from aoc import *
+from inputs import Input
 from intcode import Intcode
 
 # For my own sanity, swap the UP and DOWN tuples

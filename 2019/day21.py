@@ -146,6 +146,7 @@ RUN. What amount of hull damage does the springdroid now report?
 
 """
 from aoc import *
+from inputs import Input
 from intcode import Intcode
 from math import factorial
 import itertools

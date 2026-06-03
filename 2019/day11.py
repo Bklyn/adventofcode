@@ -105,6 +105,7 @@ on it. How many panels does it paint at least once?
 """
 
 from aoc import *
+from inputs import Input
 from intcode import Intcode
 
 TURNS = {UP: (LEFT, RIGHT), RIGHT: (UP, DOWN), DOWN: (RIGHT, LEFT), LEFT: (DOWN, UP)}

@@ -150,6 +150,7 @@ thrusters?
 """
 
 from aoc import *
+from inputs import Input
 from intcode import Intcode
 from itertools import permutations
 

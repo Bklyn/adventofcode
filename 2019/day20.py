@@ -249,6 +249,7 @@ both at the outermost layer?
 """
 
 from aoc import *
+from inputs import Input
 import sys
 import string
 from collections import defaultdict

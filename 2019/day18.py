@@ -278,6 +278,7 @@ is the fewest steps necessary to collect all of the keys?
 
 import string
 from aoc import *
+from inputs import Input
 from collections import deque, namedtuple
 
 State = namedtuple("State", "pos len visited")

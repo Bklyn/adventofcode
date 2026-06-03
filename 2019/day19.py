@@ -108,6 +108,7 @@ coordinate, multiply it by 10000, then add the point's Y coordinate?
 """
 
 from aoc import *
+from inputs import Input
 from intcode import Intcode
 
 

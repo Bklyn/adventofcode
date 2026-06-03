@@ -135,6 +135,7 @@ Although it hasn't changed, you can still get your puzzle input.
 """
 
 from aoc import *
+from inputs import Input
 from collections import defaultdict
 
 

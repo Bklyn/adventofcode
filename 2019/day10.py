@@ -219,6 +219,7 @@ its Y coordinate? (For example, 8,2 becomes 802.)
 """
 
 from aoc import *
+from inputs import Input
 from collections import defaultdict
 import math
 import cmath

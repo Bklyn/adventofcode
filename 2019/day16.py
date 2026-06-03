@@ -138,6 +138,7 @@ list?
 
 import itertools
 from aoc import *
+from inputs import Input
 
 
 def fft(input, rounds=1):

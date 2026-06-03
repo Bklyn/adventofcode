@@ -119,6 +119,7 @@ How many steps is the shortest path that collects all of the keys?
 
 import string
 from aoc import *
+from inputs import Input
 from collections import namedtuple
 
 State = namedtuple("State", "pos, seen")

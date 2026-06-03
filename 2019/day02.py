@@ -140,6 +140,7 @@ and verb=2, the answer would be 1202.)
 """
 
 from aoc import *
+from inputs import Input
 
 
 def run(tape, debug=False):

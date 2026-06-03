@@ -88,6 +88,7 @@ What message is produced after decoding your image?
 """
 
 from aoc import *
+from inputs import Input
 
 if __name__ == "__main__":
     size = (25, 6)

@@ -48,6 +48,7 @@ Y value of the first packet sent to address 255?
 """
 
 from aoc import *
+from inputs import Input
 from intcode import Intcode
 
 

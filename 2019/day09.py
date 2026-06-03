@@ -93,6 +93,7 @@ of the distress signal?
 """
 
 from aoc import *
+from inputs import Input
 from intcode import Intcode
 
 

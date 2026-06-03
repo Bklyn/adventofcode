@@ -173,6 +173,7 @@ What is the diagnostic code for system ID 5?
 """
 
 from aoc import *
+from inputs import Input
 
 
 def Intcode(tape, input=[1], debug=False):

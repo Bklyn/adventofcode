@@ -120,6 +120,7 @@ amount of ORE required to produce exactly 1 FUEL?
 import math
 from collections import Counter
 from aoc import *
+from inputs import Input
 
 
 def to_ple(s):

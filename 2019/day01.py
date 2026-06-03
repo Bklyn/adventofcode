@@ -77,6 +77,7 @@ then add them all up at the end.)
 """
 
 from aoc import *
+from inputs import Input
 
 def basic_fuel(mass):
     return max(0, mass // 3 - 2)

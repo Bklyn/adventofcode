@@ -105,6 +105,7 @@ What is the fewest combined steps the wires must take to reach an intersection?
 """
 
 from aoc import *
+from inputs import Input
 
 DIRS = {'U': UP, 'D': DOWN, 'L': LEFT, 'R': RIGHT}
 

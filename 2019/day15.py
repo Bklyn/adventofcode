@@ -156,6 +156,7 @@ import collections
 import itertools
 import random
 from aoc import *
+from inputs import Input
 from intcode import Intcode
 
 

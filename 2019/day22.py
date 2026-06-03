@@ -200,6 +200,7 @@ what number is on the card that ends up in position 2020?
 
 from collections import deque
 from aoc import *
+from inputs import Input
 
 
 def shuffle(insns, ncards, slot=None):
