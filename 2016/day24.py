@@ -120,9 +120,9 @@ def moves (state):
             yield (x1, y1), visited1
 
 maze, locs = readmaze ('24.txt')
-print 'Locations:', locs
+print('Locations:', locs)
 zero = locs.pop ('0')
 path = astar_search ((zero, '0'), metric, moves)
-print len(path)-1
+print(len(path)-1)
 path = astar_search ((zero, '0'), metric2, moves)
-print len(path)-1
+print(len(path)-1)

@@ -115,6 +115,6 @@ def all_steps(start, maxlen):
     return seen
 
 for path in dfs_paths (START, GOAL):
-    print len (path) - 1, path
+    print(len (path) - 1, path)
 
-print len (all_steps (START, 50))
+print(len (all_steps (START, 50)))

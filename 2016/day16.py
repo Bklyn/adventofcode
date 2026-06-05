@@ -89,8 +89,7 @@ assert dragon('111100001010') == '1111000010100101011110000'
 def checksum(s):
     s = list(s)
     while len(s) % 2 == 0:
-        s = map (lambda p: '1' if p[0] == p[1] else '0',
-                 [s[i:i+2] for i in range(0, len(s), 2)])
+        s = ['1' if p[0] == p[1] else '0' for p in [s[i:i+2] for i in range(0, len(s), 2)]]
     return ''.join (s)
 
 assert checksum ('10000011110010000111') == '01100'
@@ -100,5 +99,5 @@ def solve(s, fill):
         s = dragon (s)
     return checksum (s[:fill])
 
-print solve ('01111010110010011', 272)
-print solve ('01111010110010011', 35651584)
+print(solve ('01111010110010011', 272))
+print(solve ('01111010110010011', 35651584))

@@ -456,14 +456,16 @@ for expect in EXAMPLE[1:]:
         render(expect, "EXP")
         assert False
 
+from inputs import Input
+
 if __name__ == "__main__":
-    bits = parse(open("24.txt").read().splitlines())
+    bits = parse(Input(24).read().splitlines())
     seen = set()
     while bits not in seen:
         seen.add(bits)
         bits = evolve(bits)
     print(bits)
     # Solve the recursive problem
-    bits = parse(open("24.txt").read().splitlines())
+    bits = parse(Input(24).read().splitlines())
     world = evolve_recursive(bits, rounds=200)
     print(sum(count_bits(b) for b in world.values()))

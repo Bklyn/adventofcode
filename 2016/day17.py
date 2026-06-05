@@ -89,7 +89,7 @@ def is_open(c):
 
 def get_moves(seed, path):
     digest = md5.new (seed + path).hexdigest ()
-    return map (is_open, digest[:4])
+    return list(map (is_open, digest[:4]))
 
 def step(spot, direction):
     x, y = spot
@@ -140,4 +140,4 @@ assert solve('ihgpwlah') == ('DDRRRD', 370)
 assert solve('kglvqrro') == ('DDUDRLRRUDRD', 492)
 assert solve('ulqzkmiv') == ('DRURDRUDDLLDLUURRDULRLDUUDDDRR', 830)
 
-print solve ('gdjjyniy')
+print(solve ('gdjjyniy'))

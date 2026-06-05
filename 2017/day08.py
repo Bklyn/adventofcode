@@ -49,6 +49,7 @@ Your puzzle answer was 6419.
 '''
 
 import operator
+from aoc2017 import Input
 
 def run(lines):
     regs = {}
@@ -68,6 +69,6 @@ def run(lines):
 
     return regs, maxval
 
-lines = [line.strip() for line in open('8.txt').readlines()]
+lines = [line.strip() for line in Input(8).readlines()]
 regs, maxval = run (lines)
-print max (regs.values ()), maxval
+print(max (regs.values ()), maxval)

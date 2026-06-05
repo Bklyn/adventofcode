@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.8
 
 from collections import deque
+from inputs import Input
 
 
 def apply_operation(operations, addi, multi, size):
@@ -21,7 +22,7 @@ def apply_operation(operations, addi, multi, size):
 
 
 def solve():
-    input = open("22.txt").read().splitlines()
+    input = Input(22).read().splitlines()
     operations = deque(reversed([line.split(" ") for line in input]))
 
     position = 2020

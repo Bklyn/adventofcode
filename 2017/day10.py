@@ -157,7 +157,7 @@ def tie_knots(steps, length=256, rounds=64):
     skip = 0
     for r in range(rounds):
         for step in steps:
-            for x in xrange (step // 2):
+            for x in range (step // 2):
                 i = (pos + x) % length
                 j = (pos + step - x - 1) % length
                 # print 'pos=%d skip=%d step=%d i=%d j=%d swap=[%d <-> %d]' % (
@@ -189,8 +189,8 @@ def knot_hash (steps):
 INPUT = '106,118,236,1,130,0,235,254,59,205,2,87,129,25,255,118'
 
 # Knot tying (part 1)
-l = tie_knots (map (int, INPUT.split (',')), rounds=1)
-print l[0] * l[1]
+l = tie_knots (list(map (int, INPUT.split (','))), rounds=1)
+print(l[0] * l[1])
 
 # Dense hashing
 assert knot_hash ('') == 'a2582a3a0e66e6e86e3812dcb672a272'
@@ -199,4 +199,4 @@ assert knot_hash ('1,2,3') == '3efbe78a8d82f29979031a4aa0b16a9d'
 assert knot_hash ('1,2,4') == '63960835bcdc130f0b66d7ff4f6a5a8e'
 
 # Part 2
-print knot_hash (INPUT)
+print(knot_hash (INPUT))

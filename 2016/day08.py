@@ -72,15 +72,17 @@ pixels should be lit?
 import numpy
 import re
 
+from inputs import Input
+
 img = numpy.zeros([6, 50], dtype=bool)
 
-with open ('8.txt') as f:
+with Input(8) as f:
     for line in f:
         line = line.strip ()
         m = re.match ('rect (\d+)x(\d+)', line)
         if m:
-            for x in xrange (int (m.group (1))):
-                for y in xrange (int (m.group (2))):
+            for x in range (int (m.group (1))):
+                for y in range (int (m.group (2))):
                     # img.putpixel ((x,y), 1)
                     img[y, x] = True
                     pass
@@ -99,8 +101,8 @@ with open ('8.txt') as f:
             img[:,x] = (col[-shift:] + col[:-shift])
             continue
 
-print sum (img.flatten().tolist())
+print(sum (img.flatten().tolist()))
 for row in img.tolist ():
     for pixel in row:
-        print ('#' if pixel else ' '),
-    print
+        print(('#' if pixel else ' '), end=' ')
+    print()

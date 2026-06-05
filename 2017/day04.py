@@ -38,7 +38,9 @@ Under this new system policy, how many passphrases are valid?
 
 '''
 
-with open ('4.txt') as f:
+from aoc2017 import Input
+
+with Input(4) as f:
     numvalid = (0, 0)
     for line in f:
         words = set()
@@ -54,4 +56,4 @@ with open ('4.txt') as f:
                 avalid = 0
             anas.add (w)
         numvalid = (numvalid[0] + wvalid, numvalid[1] + avalid)
-    print numvalid
+    print(numvalid)

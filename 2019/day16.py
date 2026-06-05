@@ -153,7 +153,7 @@ def fft(input, rounds=1):
             output.append(digit)
         tpl = tuple(output)
         if tpl in seen:
-            print (_, tpl)
+            print((_, tpl))
         seen.add(tpl)
         input = output
     return output
@@ -164,12 +164,12 @@ assert fft([int(x) for x in list("80871224585914546619083218645595")], 100)[:8] 
     int(x) for x in list("24176176")
 ]
 
-print fft([int(x) for x in list("80871224585914546619083218645595")], 100)[:8] == [
+print(fft([int(x) for x in list("80871224585914546619083218645595")], 100)[:8] == [
     int(x) for x in list("24176176")
-]
+])
 
-print (
+print((
     "".join(
         str(x) for x in fft([int(x) for x in list(Input(16).read().strip())], 100)[:8]
     )
-)
+))

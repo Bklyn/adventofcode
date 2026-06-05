@@ -113,7 +113,7 @@ def run(tape, regs={'a': 0, 'b': 0, 'c': 0, 'd': 0}, trace=False):
     ic = 0
 
     def handler(signum, frame):
-        print ip, ic, inames[tape[ip][0]], tape[ip][1], regs
+        print(ip, ic, inames[tape[ip][0]], tape[ip][1], regs)
         signal.alarm(5)
     signal.signal(signal.SIGALRM, handler)
     signal.alarm(5)
@@ -121,7 +121,7 @@ def run(tape, regs={'a': 0, 'b': 0, 'c': 0, 'd': 0}, trace=False):
     while ip < len(tape):
         ic += 1
         if trace:
-            print ip, ic, inames[tape[ip][0]], tape[ip][1], regs, '->',
+            print(ip, ic, inames[tape[ip][0]], tape[ip][1], regs, '->', end=' ')
         insn, args = tape[ip]
         step = 1
         if insn == cpy:
@@ -157,7 +157,7 @@ def run(tape, regs={'a': 0, 'b': 0, 'c': 0, 'd': 0}, trace=False):
             if args[0] in regs:
                 regs[args[0]] -= 1
         elif insn == jnz:
-            x, y = map (lambda s: val(s, regs), args)
+            x, y = [val(s, regs) for s in args]
             if x != 0:
                 step = y
         elif insn == tgl:
@@ -180,7 +180,7 @@ def run(tape, regs={'a': 0, 'b': 0, 'c': 0, 'd': 0}, trace=False):
         else:
             assert False, 'Illegal instruction: %s' % insn
         if trace:
-            print regs, ip + step
+            print(regs, ip + step)
         ip += step
 
     signal.alarm(0)
@@ -226,6 +226,6 @@ def read(fn):
 
 tape = read('23.txt')
 
-print run(tape[:], regs={'a': 7, 'b': 0, 'c': 0, 'd': 0}, trace=False)
+print(run(tape[:], regs={'a': 7, 'b': 0, 'c': 0, 'd': 0}, trace=False))
 # [12860, 1, 0, 0]
-print run(tape[:], regs={'a': 12, 'b': 0, 'c': 0, 'd': 0}, trace=False)
+print(run(tape[:], regs={'a': 12, 'b': 0, 'c': 0, 'd': 0}, trace=False))

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from aoc import *
+from inputs import Input
 
 print(
     """
@@ -17,7 +18,7 @@ auto monad(int64_t input) {
 """
 )
 
-with open("24.txt") as f:
+with Input(24) as f:
     for line in f.read().splitlines():
         line = vector(line)
         if line[0] == "inp":

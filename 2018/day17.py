@@ -237,6 +237,7 @@ class Reservoir(dict):
             x, y = oldx + dx, oldy + dy
             if self.graph[y, x] == BIG:
                 # clay
+                pass
 
 
 example = Reservoir('''x=495, y=2..7

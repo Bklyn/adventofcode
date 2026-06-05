@@ -1,4 +1,6 @@
 #!/usr/bin/python
+from inputs import Input
+
 '''
 Advent of Code[About][AoC++][Events][Settings][Log Out]Bklyn 38*
    sub y{2016}[Calendar][Leaderboard][Stats][Sponsors]
@@ -23,11 +25,11 @@ Given the list of blocked IPs you retrieved from the firewall (your puzzle input
 To begin, get your puzzle input.
 '''
 
-with open('20.txt') as f:
+with Input(20) as f:
     segments = []
     for line in f:
         line = line.strip()
-        low, hi = map (int, line.split ('-'))
+        low, hi = list(map (int, line.split ('-')))
         segments.append ((low, hi))
     reduced = []
     prevlow, prevhi = -1, -1
@@ -36,7 +38,7 @@ with open('20.txt') as f:
         if not reduced or low > prevhi + 1:
             reduced.append ((low, hi))
             allowed += low - prevhi - 1
-            print (prevlow, prevhi), (low, hi), low - prevhi - 1, allowed
+            print((prevlow, prevhi), (low, hi), low - prevhi - 1, allowed)
             prevlow, prevhi = low, hi
         else:
             reduced[-1] = (prevlow, max (hi, prevhi))
@@ -44,7 +46,7 @@ with open('20.txt') as f:
     first = reduced[0]
     allowed += 0xffffffff - reduced[-1][1]
     if first[0] > 0:
-        print 0
+        print(0)
     else:
-        print first[1] + 1
-    print allowed
+        print(first[1] + 1)
+    print(allowed)

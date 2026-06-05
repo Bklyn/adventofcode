@@ -194,9 +194,9 @@ def legal (floor):
 
 def solver (state, seen={}):
     floor, floors = state
-    moves = [
+    moves = []
 
 def solve (state):
     pass
 
-print state
+print(state)

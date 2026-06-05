@@ -55,6 +55,8 @@ each of outputs 0, 1, and 2?
 import re
 from collections import defaultdict
 
+from inputs import Input
+
 bots = defaultdict (list)
 rules = {}
 compares = {}
@@ -71,21 +73,21 @@ def step (bot):
     return True
 
 def run ():
-    while filter (step, bots.keys ()):
+    while list(filter (step, list(bots.keys ()))):
         pass
     pass
 
-with open ('10.txt') as f:
+with Input(10) as f:
     for input in f:
         input = input.strip ()
         m = re.match ('value (\d+) goes to bot (\d+)', input)
         if m:
-            value, bot = map (int, m.group (1, 2))
+            value, bot = list(map (int, m.group (1, 2)))
             bots[bot].append (value)
             continue
         m = re.match ('bot (\d+) gives low to (bot|output) (\d+) and high to (bot|output) (\d+)', input)
         if m:
-            bot, low, high = map (int, m.group (1, 3, 5))
+            bot, low, high = list(map (int, m.group (1, 3, 5)))
             if m.group (2) == 'bot':
                 low = bots[low]
             else:
@@ -99,5 +101,5 @@ with open ('10.txt') as f:
         assert False, 'Unparsed input: ' + input
     run ()
 
-print compares[(17, 61)]
-print outputs[0][0] * outputs[1][0] * outputs[2][0]
+print(compares[(17, 61)])
+print(outputs[0][0] * outputs[1][0] * outputs[2][0])

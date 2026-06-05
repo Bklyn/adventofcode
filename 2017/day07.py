@@ -108,6 +108,7 @@ Although it hasn't changed, you can still get your puzzle input.
 
 from collections import defaultdict
 from itertools import groupby
+from aoc2017 import Input
 
 
 class Node:
@@ -153,7 +154,7 @@ def make_graph(lines):
 
 
 def find_root(graph):
-    root = [x for x in graph.itervalues() if x.parent is None]
+    root = [x for x in graph.values() if x.parent is None]
     assert len(root) == 1
     return root[0]
 
@@ -201,9 +202,9 @@ assert TEST_GRAPH['ugml'].totwgt == 251
 assert TEST_GRAPH['padx'].totwgt == 243
 assert solve (find_root(TEST_GRAPH)) == 60
 
-lines = [line.strip() for line in open('7.txt').readlines()]
+lines = [line.strip() for line in Input(7).readlines()]
 graph = make_graph(lines)
 root = find_root(graph)
-print root.name
+print(root.name)
 
-print solve(root)
+print(solve(root))

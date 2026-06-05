@@ -53,6 +53,8 @@ What is the decompressed length of the file using this improved format?
 import re
 import fileinput
 
+from inputs import Input
+
 marker = re.compile ('\((\d+)x(\d+)\)')
 
 def decode (input, recurse=False):
@@ -77,7 +79,7 @@ def decode (input, recurse=False):
         pass
     return outlen
 
-with open ('9.txt') as f:
+with Input(9) as f:
     input = f.read ().strip ()
-    print decode (input, False)
-    print decode (input, True)
+    print(decode (input, False))
+    print(decode (input, True))

@@ -116,12 +116,12 @@ INPUT = '''3499774489291465329682787161338855299363493517373359747499739
 def captcha(msg, halfway_around=False):
     prev = None
     answer = 0
-    digits = map(int, filter (lambda x: x in string.digits, msg))
+    digits = list(map(int, [x for x in msg if x in string.digits]))
     if halfway_around:
         offset = len(digits)/2
     else:
         offset = 1
-    for i in xrange (len (digits)):
+    for i in range (len (digits)):
         j = (i + offset) % len (digits)
         if digits[i] == digits[j]:
             answer += digits[i]
@@ -130,7 +130,7 @@ def captcha(msg, halfway_around=False):
 assert captcha('1122') == 3
 assert captcha('1111') == 4
 
-print captcha(INPUT)
+print(captcha(INPUT))
 
 def captcha2(msg):
     return captcha(msg, True)
@@ -141,4 +141,4 @@ assert captcha2('123425') == 4
 assert captcha2('123123') == 12
 assert captcha2('12131415') == 4
 
-print captcha2(INPUT)
+print(captcha2(INPUT))

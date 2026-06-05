@@ -63,7 +63,7 @@ def has_five(c, s):
 
 def do_hash(salt, idx, numhashes):
     seed = salt + str(idx)
-    for i in xrange(numhashes):
+    for i in range(numhashes):
         seed = md5.new(seed).hexdigest()
     return seed
 
@@ -83,7 +83,7 @@ def solve (salt, numkeys=64, numhashes=1):
                 # print 'Key: idx=%d c=%s digest=%s' % (
                 # idx, match, digest)
                 matches.add (idx)
-                triples = filter (lambda x: x[0] != idx, triples)
+                triples = [x for x in triples if x[0] != idx]
         if c is not None:
             triples.append ((index, c))
         if len(triples) and triples[0][0] + 1000 == index:
@@ -96,5 +96,5 @@ def solve (salt, numkeys=64, numhashes=1):
     return keys
 
 # print solve ('abc')[-1]
-print solve ('cuanljph')[-1]
-print solve ('cuanljph', numhashes=2017)[-1]
+print(solve ('cuanljph')[-1])
+print(solve ('cuanljph', numhashes=2017)[-1])

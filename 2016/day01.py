@@ -26,5 +26,5 @@ for op in INPUT.split (', '):
             else:
                 VISITED.add ((x, y))
 
-print abs(x) + abs(y)
-print abs(FINAL[0]) + abs(FINAL[1])
+print(abs(x) + abs(y))
+print(abs(FINAL[0]) + abs(FINAL[1]))

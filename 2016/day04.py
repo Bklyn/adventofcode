@@ -35,6 +35,8 @@ import re
 import string
 from collections import defaultdict
 
+from inputs import Input
+
 ROOM = re.compile (r'([-a-z]+)-(\d+)\[([a-z]{5})\]')
 
 def sorter (x, y):
@@ -52,16 +54,16 @@ def decode (name, sector):
 
 answer = 0
 
-with open ('4.txt') as f:
+with Input(4) as f:
     for line in f:
         m = ROOM.match (line.strip ())
         if not m:
-            print >>sys.stderr, line
+            print(line, file=sys.stderr)
         name = m.group (1)
         freq = defaultdict (int)
         for letter in [c for c in name if c.isalpha()]:
             freq[letter] += 1
-        mysum = ''.join ((map (lambda x: x[0], sorted (freq.items (), sorter)))[:5])
+        mysum = ''.join (([x[0] for x in sorted (list(freq.items ()), sorter)])[:5])
         sector = int (m.group (2))
         checksum = m.group (3)
         # print name, sector, checksum, mysum
@@ -69,6 +71,6 @@ with open ('4.txt') as f:
             answer += sector
         decoded = decode (name, sector)
         if decoded == 'northpole object storage':
-            print decoded, sector
+            print(decoded, sector)
 
-print answer
+print(answer)

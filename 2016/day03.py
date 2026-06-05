@@ -46,6 +46,8 @@ Your puzzle answer was 1838.
 
 import re
 
+from inputs import Input
+
 valid1 = 0
 valid2 = 0
 
@@ -53,11 +55,11 @@ def isvalid (edges):
     srow = sorted (edges)
     return srow[0] + srow[1] > srow[2]
 
-with open ('3.txt') as f:
+with Input(3) as f:
     lineno = 0
     cols = [[], [], []]
     for line in f:
-        row = map (int, re.split (r'\s+', line.strip ()))
+        row = list(map (int, re.split (r'\s+', line.strip ())))
         valid1 += isvalid (row)
         for i in range (len (row)):
             cols[i].append (row[i])
@@ -69,5 +71,5 @@ with open ('3.txt') as f:
         pass
     pass
 
-print valid1
-print valid2
+print(valid1)
+print(valid2)

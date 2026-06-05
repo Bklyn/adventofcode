@@ -40,16 +40,18 @@ version of the message being sent?'''
 
 from collections import Counter
 
+from inputs import Input
+
 freq = None
 
-with open ('6.txt') as f:
+with Input(6) as f:
     for line in f:
         line = line.strip ()
         if freq is None:
             freq = [Counter () for x in range (len (line))]
-        for i in xrange (len (line)):
+        for i in range (len (line)):
             c = line[i]
             freq[i].update (c)
 
-print ''.join (map (lambda x: x.most_common(1)[0][0], freq))
-print ''.join (map (lambda x: x.most_common()[-1][0], freq))
+print(''.join ([x.most_common(1)[0][0] for x in freq]))
+print(''.join ([x.most_common()[-1][0] for x in freq]))

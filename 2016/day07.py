@@ -59,6 +59,8 @@ in your puzzle input support SSL?
 
 import re
 
+from inputs import Input
+
 TOKEN = re.compile (r'(\w+|\[\w+\])-?')
 
 def is_abba (tok):
@@ -79,7 +81,7 @@ def get_abas (tok):
 
 count = 0
 ssl_count = 0
-with open ('7.txt') as f:
+with Input(7) as f:
     for line in f:
         line = line.strip ()
         abbas = 0
@@ -96,7 +98,7 @@ with open ('7.txt') as f:
             else:
                 hypernets.add (tok[1:-1])
                 habas.update (get_abas (tok[1:-1]))
-        if abbas and not filter (is_abba, hypernets):
+        if abbas and not list(filter (is_abba, hypernets)):
             count += 1
         babs = set (map (make_bab, abas))
         if abas and habas and babs & habas:
@@ -104,5 +106,5 @@ with open ('7.txt') as f:
         pass
     pass
 
-print count
-print ssl_count
+print(count)
+print(ssl_count)

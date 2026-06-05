@@ -74,6 +74,9 @@ To begin, get your puzzle input.
 
 import re
 
+from inputs import Input
+
+
 def swap(input, x, y):
     if y < x:
         x, y = y, x
@@ -107,12 +110,12 @@ def solve(input, f, reverse=False, debug=False):
         assert len (input) == ilen, 'Logic error parsing %s: input=%s len=%d expect=%d' % (
             prevline, input, len(input), ilen)
         if debug and prevline:
-            print '>> %s -> %s' % (prevline, input)
+            print('>> %s -> %s' % (prevline, input))
         line = line.strip()
         prevline = line
         m = re.match ('swap position (\d+) with position (\d+)', line)
         if m:
-            x, y = map (int, m.group (1, 2))
+            x, y = list(map (int, m.group (1, 2)))
             input = swap (input, x, y)
             continue
         m = re.match ('swap letter (\w) with letter (\w)', line)
@@ -137,12 +140,12 @@ def solve(input, f, reverse=False, debug=False):
             continue
         m = re.match ('reverse positions (\d+) through (\d+)', line)
         if m:
-            x, y = map (int, m.group (1, 2))
+            x, y = list(map (int, m.group (1, 2)))
             input = input[:x] + input[x:y+1][::-1] + input[y+1:]
             continue
         m = re.match ('move position (\d+) to position (\d+)', line)
         if m:
-            x, y = map (int, m.group (1,2))
+            x, y = list(map (int, m.group (1,2)))
             c = input[x]
             # print 'Move: %d -> %d: %s = [%s][%s][%s]' % (
             # x, y, input, input[:x], input[x], input[x+1:])
@@ -179,15 +182,15 @@ assert solve ('abcde', [
     'rotate based on position of letter b',
     'rotate based on position of letter d']) == 'decab'
 
-with open ('21.txt') as f:
-    print solve ('abcdefgh', f)
+with Input(21) as f:
+    print(solve ('abcdefgh', f))
 
 import itertools
 
-with open ('21.txt') as f:
+with Input(21) as f:
     insns = f.readlines ()
     for input in itertools.permutations ('abcdefgh'):
         input = ''.join (input)
         if solve (input, insns) == 'fbgdceah':
-            print input
+            print(input)
             break

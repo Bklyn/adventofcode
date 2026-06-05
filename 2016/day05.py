@@ -46,7 +46,7 @@ while len(password) < 8:
     index = index + 1
     pass
 
-print ''.join (password)
+print(''.join (password))
 
 password = '_' * 8
 index = 0
@@ -62,4 +62,4 @@ while password.find ('_') >= 0:
     index = index + 1
     pass
 
-print password
+print(password)

@@ -19,7 +19,7 @@ for line in INSNS.split ('\n'):
         else:
             x = min (2, x+1)
     ANSWER.append (str (KEYPAD[y][x]))
-print ''.join (ANSWER)
+print(''.join (ANSWER))
 
 
 #     1
@@ -47,4 +47,4 @@ for line in INSNS.split ('\n'):
         if KEYPAD2[newy][newx] is not None:
             x, y = (newx, newy)
     ANSWER.append (str (KEYPAD2[y][x]))
-print ''.join (ANSWER)
+print(''.join (ANSWER))

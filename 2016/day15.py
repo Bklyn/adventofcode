@@ -72,5 +72,5 @@ def solve(discs):
 
 DISCS = [(17, 5), (19, 8), (7, 1), (13, 7), (5, 1), (3, 0)]
 
-print solve(DISCS)
-print solve(DISCS + [(11, 0)])
+print(solve(DISCS))
+print(solve(DISCS + [(11, 0)]))

@@ -23,7 +23,7 @@ INPUT='''
 def checksum(x):
     result = 0
     for line in x.split('\n'):
-        row = map (int, line.split ())
+        row = list(map (int, line.split ()))
         if not len(row):
             continue
         row = sorted (row)
@@ -35,17 +35,17 @@ assert checksum('''5 1 9 5
 7 5 3
 2 4 6 8''') == 18
 
-print checksum(INPUT)
+print(checksum(INPUT))
 
 def evenly(x):
     result = 0
     for line in x.split('\n'):
-        row = map (int, line.split ())
+        row = list(map (int, line.split ()))
         if not len(row):
             continue
         # Input is small enough, just use brute force
         row = sorted (row)
-        for i, j in itertools.product (range (0, len(row)), range (1, len(row))):
+        for i, j in itertools.product (list(range(0, len(row))), list(range(1, len(row)))):
             if j <= i:
                 continue
             if row[j] % row[i] == 0:
@@ -58,4 +58,4 @@ assert evenly('''
 9 4 7 3
 3 8 6 5''') == 9
 
-print evenly(INPUT)
+print(evenly(INPUT))

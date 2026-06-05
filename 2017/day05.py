@@ -74,7 +74,9 @@ def run(code, decrease=False):
 assert run([0, 3, 0, 1, -3]) == 5
 assert run([0, 3, 0, 1, -3], True) == 10
 
-code = map (int, [line.strip() for line in open('5.txt').readlines()])
+from aoc2017 import Input
 
-print run(code[:])
-print run(code[:], True)
+code = list(map (int, [line.strip() for line in Input(5).readlines()]))
+
+print(run(code[:]))
+print(run(code[:], True))

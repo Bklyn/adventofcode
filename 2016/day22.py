@@ -145,7 +145,9 @@ node-x0-y0?
 import re
 from bisect import bisect_left
 
-input = [line.strip() for line in open('22.txt').readlines()]
+from inputs import Input
+
+input = [line.strip() for line in Input(22).readlines()]
 nodes = []
 dims = [0, 0]
 
@@ -153,7 +155,7 @@ for line in input:
     m = re.match (r'/dev/grid/node-x(\d+)-y(\d+)\s+(\d+)T\s+(\d+)T\s+(\d+)T\s+(\d+)%', line)
     if not m:
         continue
-    x, y, size, used, avail, pct = map(int, m.group(1, 2, 3, 4, 5, 6))
+    x, y, size, used, avail, pct = list(map(int, m.group(1, 2, 3, 4, 5, 6)))
     nodes.append (((x, y), size, used, avail))
     dims[0] = max(dims[0], x)
     dims[1] = max(dims[1], y)
@@ -169,7 +171,7 @@ avail = [n[3] for n in vnodes]
 
 empty = (None, None)
 
-print 'Dims', dims, 'Goal', goal
+print('Dims', dims, 'Goal', goal)
 
 def viable_nodes (n):
     x = bisect_left (avail, n[2])
@@ -178,17 +180,17 @@ def viable_nodes (n):
 
 for n in nodes:
     if n[2] < 1:
-        print 'Empty', n
+        print('Empty', n)
         empty = n[0]
         continue
     viable += len (viable_nodes (n))
 
-print viable
+print(viable)
 
 for n in nodes:
     x, y = n[0]
     if x == 0:
-        print '%2d: ' % y,
+        print('%2d: ' % y, end=' ')
     if x == dims[0] and y == 0:
         rep = 'G/%d' % n[2]
     elif n[2] == 0:
@@ -198,9 +200,9 @@ for n in nodes:
     else:
         rep = '.'
     if x < dims[0]:
-        print rep,
+        print(rep, end=' ')
     else:
-        print rep
+        print(rep)
 
 # testes:
 # 128 - too low
@@ -208,5 +210,5 @@ for n in nodes:
 # 256 too hi?
 
 # TotalMoves = x0+y0+xmax+(xmax-1)*5 worked for me
-print empty[0] + empty[1] + dims[0] + (dims[0]-1) * 5
-print empty[1] + 2 + (dims[0] - empty[0] + 2) + (dims[0]-1)*5
+print(empty[0] + empty[1] + dims[0] + (dims[0]-1) * 5)
+print(empty[1] + 2 + (dims[0] - empty[0] + 2) + (dims[0]-1)*5)

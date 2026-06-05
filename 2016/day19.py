@@ -60,5 +60,5 @@ def part2(n):
 
 assert part1(5) == 3
 
-print part1(3001330)
-print part2(3001330)
+print(part1(3001330))
+print(part2(3001330))

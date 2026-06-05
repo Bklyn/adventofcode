@@ -117,5 +117,5 @@ def solve(firstrow, numrows):
 
 assert solve('.^^.^.^^^^', 10) == 38
 
-print solve(input, 40)
-print solve(input, 400000)
+print(solve(input, 40))
+print(solve(input, 400000))

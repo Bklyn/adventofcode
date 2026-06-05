@@ -64,6 +64,8 @@ in register a?
 
 import re
 
+from inputs import Input
+
 
 def reg(s):
     return ord(s[0]) - ord('a')
@@ -100,7 +102,7 @@ def run(tape, regs=[0, 0, 0, 0]):
         ip += tape[ip](regs)
     return regs
 
-with open('12.txt') as f:
+with Input(12) as f:
     TAPE = []
     for line in f:
         line = line.strip()
@@ -133,5 +135,5 @@ with open('12.txt') as f:
                         count if val != 0 else 1)
             continue
         assert False, 'Unknown asm: ' + line
-    print run(TAPE)
-    print run(TAPE, regs=[0, 0, 1, 0])
+    print(run(TAPE))
+    print(run(TAPE, regs=[0, 0, 1, 0]))

@@ -4,7 +4,10 @@
 #
 # http://nbviewer.jupyter.org/url/norvig.com/ipython/Advent%20of%20Code.ipynb
 
+import io
 import re
+
+from aoc import Puzzle
 import numpy as np
 import math
 import random
@@ -29,14 +32,8 @@ BIG = 10 ** 999
 ################ Functions for Input, Parsing
 
 def Input(day):
-    "Open this day's input file."
-    filename = '{}.txt'.format(day)
-    try:
-        return open(filename)
-    except FileNotFoundError:
-        return urllib.request.urlopen(
-            # Short URL to the raw GitHub content for this project
-            'https://tinyurl.com/yamsqgej/' + filename)
+    "Return this day's puzzle input as a file-like object, fetched via aocd."
+    return io.StringIO(Puzzle(day=day, year=2017).input_data)
 
 
 def array(lines):
