@@ -113,6 +113,6 @@ def test_beacons():
 
 
 if __name__ == "__main__":
-    p = Puzzle(day=15)
+    p = Puzzle(day=15, year=2022)
     assert beacons(EXAMPLE, 10) == (26, 56000011)
     print(beacons(p.input_data, 2_000_000))

@@ -9,6 +9,13 @@ dependencies = [
 ]
 requires-python = ">=3.12"
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["aoc"]
+
 [dependency-groups]
 dev = ["pytest", "ruff", "pre_commit"]
 
@@ -19,6 +26,10 @@ markers = [
     "real: tests against real puzzle input (may be slow)",
 ]
 addopts = "-m 'not real'"
+
+[tool.ruff]
+force-exclude = true
+extend-exclude = ["2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024"]
 
 [tool.ruff.lint]
 ignore = ["F403"]

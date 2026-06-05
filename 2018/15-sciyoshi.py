@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import enum
 import itertools
 import collections
+from aoc2018 import Input
 
 class Pt(NamedTuple('Pt', [('x', int), ('y', int)])):
     def __add__(self, other):
@@ -114,7 +115,7 @@ class Grid(dict):
 
         return closest
 
-lines = open('15.txt').read().splitlines()
+lines = Input(15).read().splitlines()
 
 grid = Grid(lines)
 

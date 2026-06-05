@@ -2,6 +2,8 @@
 #
 # From https://www.reddit.com/r/adventofcode/comments/ee0rqi/2019_day_22_solutions/fbtugcu
 
+from inputs import Input
+
 m = 119315717514047
 n = 101741582076661
 pos = 2020
@@ -11,7 +13,7 @@ shuffles = {
     "cut ": lambda x, m, a, b: (a, (b - x) % m),
 }
 a, b = 1, 0
-with open("22.txt") as f:
+with Input(22) as f:
     for s in f.read().strip().split("\n"):
         for name, fn in shuffles.items():
             if s.startswith(name):

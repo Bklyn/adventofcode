@@ -49,9 +49,9 @@ while frontier:
             next = (floor+direction, tuple(new_floors))
             new_cost = cost_so_far[current] + 1
             if next not in cost_so_far or new_cost < cost_so_far[next]:
-                print new_cost, len (cost_so_far), next
+                print(new_cost, len (cost_so_far), next)
                 cost_so_far[next] = new_cost
                 priority = new_cost - len(new_floors[3])*10 # silly manually tweakable heuristic factor
                 heapq.heappush(frontier, (priority, next))
 
-print(cost_so_far[current], current)
+print((cost_so_far[current], current))

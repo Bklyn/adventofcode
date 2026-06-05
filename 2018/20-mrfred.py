@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 from collections import *
+from aoc2018 import Input
 
-f = open("20.txt").read().strip("\n")
+f = Input(20).read().strip("\n")
 
 d = {
     "N": (0, -1),

@@ -1,7 +1,7 @@
 import sys,re
-from Queue import PriorityQueue
+from queue import PriorityQueue
 
-bots = [map(int, re.findall("-?\d+", line)) for line in sys.stdin]
+bots = [list(map(int, re.findall("-?\d+", line))) for line in sys.stdin]
 q = PriorityQueue()
 for x,y,z,r in bots:
   d = abs(x) + abs(y) + abs(z)
@@ -16,4 +16,4 @@ while not q.empty():
   if count > maxCount:
     result = dist
     maxCount = count
-print result
+print(result)
